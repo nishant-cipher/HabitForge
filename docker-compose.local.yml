@@ -1,28 +1,6 @@
 version: '3.8'
 
 services:
-  # MongoDB Database - COMMENTED OUT - Using local MongoDB
-  # mongodb:
-  #   image: mongo:6.0
-  #   container_name: habitforge-mongodb
-  #   restart: unless-stopped
-  #   ports:
-  #     - "27017:27017"
-  #   environment:
-  #     MONGO_INITDB_ROOT_USERNAME: habitforge
-  #     MONGO_INITDB_ROOT_PASSWORD: habitforge123
-  #     MONGO_INITDB_DATABASE: habitforge
-  #   volumes:
-  #     - mongodb_data:/data/db
-  #     - mongodb_config:/data/configdb
-  #   networks:
-  #     - habitforge-network
-  #   healthcheck:
-  #     test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/habitforge --quiet
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-
   # Redis Cache & Queue
   redis:
     image: redis:7.0-alpine
@@ -36,7 +14,7 @@ services:
     networks:
       - habitforge-network
     healthcheck:
-      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -95,10 +73,10 @@ services:
       REFRESH_TOKEN_EXPIRES_IN: 7d
     depends_on:
       - redis
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - habitforge-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./user-service:/app
       - /app/node_modules
@@ -123,10 +101,10 @@ services:
       USER_SERVICE_URL: http://user-service:3001
     depends_on:
       - redis
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - habitforge-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./habit-service:/app
       - /app/node_modules
@@ -152,10 +130,10 @@ services:
       HABIT_SERVICE_URL: http://habit-service:3002
     depends_on:
       - redis
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - habitforge-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./club-service:/app
       - /app/node_modules
@@ -182,10 +160,10 @@ services:
       CLUB_SERVICE_URL: http://club-service:3003
     depends_on:
       - redis
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - habitforge-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./analytics-service:/app
       - /app/node_modules
@@ -196,6 +174,4 @@ networks:
     driver: bridge
 
 volumes:
-  mongodb_data:
-  mongodb_config:
   redis_data:
