@@ -12,7 +12,7 @@ This guide walks you through testing the complete habit tracking and gamificatio
 ## Setup
 
 ```bash
-# Start infrastructure
+# Start infrastructure  
 docker-compose up -d mongodb redis
 
 # Terminal 1 - API Gateway

@@ -4,16 +4,16 @@ import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
-// Public routes
-router.post('/auth/register', authController.register);
-router.post('/auth/login', authController.login);
-router.post('/auth/logout', authController.logout);
+// Public routes (mounted at /api/auth)
+router.post('/register', authController.register);
+router.post('/login', authController.login);
+router.post('/logout', authController.logout);
 
-// Protected routes
-router.get('/users/profile', authenticate, authController.getProfile);
-router.put('/users/profile', authenticate, authController.updateProfile);
+// Protected routes (mounted at /api/users)
+router.get('/profile', authenticate, authController.getProfile);
+router.put('/profile', authenticate, authController.updateProfile);
 
 // Inter-service routes (for Habit Service to update XP)
-router.put('/users/:userId/xp', authController.updateUserXP);
+router.put('/:userId/xp', authController.updateUserXP);
 
 export default router;

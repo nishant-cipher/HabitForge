@@ -33,6 +33,12 @@ app.get('/health', (req: Request, res: Response) => {
     });
 });
 
+// Debug logging
+app.use((req: Request, res: Response, next: any) => {
+    console.log(`[${req.method}] ${req.path}`);
+    next();
+});
+
 // Public routes (no authentication required)
 app.use('/api/auth', rateLimiter, userServiceProxy);
 

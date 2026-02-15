@@ -45,10 +45,10 @@ echo "$PASSWORD" | sudo -S docker run -d \
     -e NODE_ENV=development \
     -e PORT=3001 \
     -e MONGODB_URI=mongodb://host.docker.internal:27017/habitforge \
-    -e REDIS_HOST=redis \
+    -e REDIS_HOST=habitforge-redis \
     -e REDIS_PORT=6379 \
     -e REDIS_PASSWORD=habitforge123 \
-    -e JWT_SECRET=your-super-secret-jwt-key-change-in-production \
+    -e JWT_SECRET=your-super-secret-jwt-key \
     -e JWT_EXPIRES_IN=15m \
     -e REFRESH_TOKEN_EXPIRES_IN=7d \
     -v "$(pwd)/user-service:/app" \
@@ -74,10 +74,11 @@ echo "$PASSWORD" | sudo -S docker run -d \
     -e NODE_ENV=development \
     -e PORT=3002 \
     -e MONGODB_URI=mongodb://host.docker.internal:27017/habitforge \
-    -e REDIS_HOST=redis \
+    -e REDIS_HOST=habitforge-redis \
     -e REDIS_PORT=6379 \
     -e REDIS_PASSWORD=habitforge123 \
-    -e USER_SERVICE_URL=http://user-service:3001 \
+    -e JWT_SECRET=your-super-secret-jwt-key \
+    -e USER_SERVICE_URL=http://habitforge-user-service:3001 \
     -v "$(pwd)/habit-service:/app" \
     -v /app/node_modules \
     --restart unless-stopped \
@@ -101,11 +102,11 @@ echo "$PASSWORD" | sudo -S docker run -d \
     -e NODE_ENV=development \
     -e PORT=3003 \
     -e MONGODB_URI=mongodb://host.docker.internal:27017/habitforge \
-    -e REDIS_HOST=redis \
+    -e REDIS_HOST=habitforge-redis \
     -e REDIS_PORT=6379 \
     -e REDIS_PASSWORD=habitforge123 \
-    -e USER_SERVICE_URL=http://user-service:3001 \
-    -e HABIT_SERVICE_URL=http://habit-service:3002 \
+    -e USER_SERVICE_URL=http://habitforge-user-service:3001 \
+    -e HABIT_SERVICE_URL=http://habitforge-habit-service:3002 \
     -v "$(pwd)/club-service:/app" \
     -v /app/node_modules \
     --restart unless-stopped \
@@ -129,12 +130,12 @@ echo "$PASSWORD" | sudo -S docker run -d \
     -e NODE_ENV=development \
     -e PORT=3004 \
     -e MONGODB_URI=mongodb://host.docker.internal:27017/habitforge \
-    -e REDIS_HOST=redis \
+    -e REDIS_HOST=habitforge-redis \
     -e REDIS_PORT=6379 \
     -e REDIS_PASSWORD=habitforge123 \
-    -e USER_SERVICE_URL=http://user-service:3001 \
-    -e HABIT_SERVICE_URL=http://habit-service:3002 \
-    -e CLUB_SERVICE_URL=http://club-service:3003 \
+    -e USER_SERVICE_URL=http://habitforge-user-service:3001 \
+    -e HABIT_SERVICE_URL=http://habitforge-habit-service:3002 \
+    -e CLUB_SERVICE_URL=http://habitforge-club-service:3003 \
     -v "$(pwd)/analytics-service:/app" \
     -v /app/node_modules \
     --restart unless-stopped \
@@ -157,13 +158,13 @@ echo "$PASSWORD" | sudo -S docker run -d \
     -e NODE_ENV=development \
     -e PORT=3000 \
     -e JWT_SECRET=your-super-secret-jwt-key-change-in-production \
-    -e REDIS_HOST=redis \
+    -e REDIS_HOST=habitforge-redis \
     -e REDIS_PORT=6379 \
     -e REDIS_PASSWORD=habitforge123 \
-    -e USER_SERVICE_URL=http://user-service:3001 \
-    -e HABIT_SERVICE_URL=http://habit-service:3002 \
-    -e CLUB_SERVICE_URL=http://club-service:3003 \
-    -e ANALYTICS_SERVICE_URL=http://analytics-service:3004 \
+    -e USER_SERVICE_URL=http://habitforge-user-service:3001 \
+    -e HABIT_SERVICE_URL=http://habitforge-habit-service:3002 \
+    -e CLUB_SERVICE_URL=http://habitforge-club-service:3003 \
+    -e ANALYTICS_SERVICE_URL=http://habitforge-analytics-service:3004 \
     -v "$(pwd)/api-gateway:/app" \
     -v /app/node_modules \
     --restart unless-stopped \

@@ -12,7 +12,8 @@ export interface RegisterData {
 }
 
 export interface LoginData {
-    email: string;
+    email?: string;
+    username?: string;
     password: string;
 }
 
@@ -69,8 +70,12 @@ export async function loginUser(
     data: LoginData,
     generateTokens: (userId: string, email: string, mode: string) => { accessToken: string; refreshToken: string }
 ): Promise<AuthTokens> {
-    // Find user
-    const user = await User.findOne({ email: data.email });
+    // Find user by email or username
+    const query = data.email
+        ? { email: data.email }
+        : { username: data.username };
+
+    const user = await User.findOne(query);
     if (!user) {
         throw new Error('Invalid credentials');
     }

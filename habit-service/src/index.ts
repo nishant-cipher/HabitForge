@@ -20,8 +20,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/habits', habitRoutes);
-app.use('/gamification', gamificationRoutes);
+app.use('/api/habits', habitRoutes);
+app.use('/api/gamification', gamificationRoutes);
 
 // Health check
 app.get('/health', async (req: Request, res: Response) => {
