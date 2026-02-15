@@ -1,7 +1,7 @@
 {
     "info": {
-        "name": "HabitForge API Testing",
-        "description": "Complete Postman collection for testing HabitForge microservices via API Gateway. Login supports both email and username.",
+        "name": "HabitForge Complete API",
+        "description": "Complete Postman collection for all HabitForge microservices via API Gateway",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "variable": [
@@ -19,30 +19,19 @@
             "key": "habitId",
             "value": "",
             "type": "string"
+        },
+        {
+            "key": "clubId",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "clubHabitId",
+            "value": "",
+            "type": "string"
         }
     ],
     "item": [
-        {
-            "name": "Health Checks",
-            "item": [
-                {
-                    "name": "API Gateway Health",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{baseUrl}}/health",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "health"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
         {
             "name": "Authentication",
             "item": [
@@ -353,6 +342,472 @@
                                 "gamification",
                                 "{{habitId}}",
                                 "logs"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Clubs",
+            "item": [
+                {
+                    "name": "Create Club",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.collectionVariables.set('clubId', response.data._id);",
+                                    "    console.log('✅ Club ID saved:', response.data._id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Fitness Warriors\",\n  \"description\": \"A club for fitness enthusiasts\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/clubs",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "clubs"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get My Clubs",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/clubs",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "clubs"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Club Details",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/clubs/{{clubId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "clubs",
+                                "{{clubId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Join Club",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/clubs/{{clubId}}/join",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "clubs",
+                                "{{clubId}}",
+                                "join"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Leave Club",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/clubs/{{clubId}}/leave",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "clubs",
+                                "{{clubId}}",
+                                "leave"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Club Members",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/clubs/{{clubId}}/members",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "clubs",
+                                "{{clubId}}",
+                                "members"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Add Club Task",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.collectionVariables.set('clubHabitId', response.data._id);",
+                                    "    console.log('✅ Club Habit ID saved:', response.data._id);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Daily Push-ups\",\n  \"description\": \"50 push-ups every day\",\n  \"category\": \"HEALTH\",\n  \"difficulty\": 3,\n  \"frequency\": \"DAILY\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/clubs/{{clubId}}/habits",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "clubs",
+                                "{{clubId}}",
+                                "habits"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Club Tasks",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/clubs/{{clubId}}/habits",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "clubs",
+                                "{{clubId}}",
+                                "habits"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Accept Club Task",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/clubs/{{clubId}}/habits/{{clubHabitId}}/accept",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "clubs",
+                                "{{clubId}}",
+                                "habits",
+                                "{{clubHabitId}}",
+                                "accept"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get My Accepted Tasks",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/clubs/{{clubId}}/accepted-habits",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "clubs",
+                                "{{clubId}}",
+                                "accepted-habits"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Club Activity",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/clubs/{{clubId}}/activity?limit=50",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "clubs",
+                                "{{clubId}}",
+                                "activity"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "50"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Club Chat",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/clubs/{{clubId}}/chat?limit=100",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "clubs",
+                                "{{clubId}}",
+                                "chat"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "100"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Send Chat Message",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"message\": \"Hello everyone! Let's crush our goals today!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/clubs/{{clubId}}/chat",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "clubs",
+                                "{{clubId}}",
+                                "chat"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Analytics",
+            "item": [
+                {
+                    "name": "Get Dashboard",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/analytics/dashboard",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "analytics",
+                                "dashboard"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Trends (Weekly)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/analytics/trends?period=WEEKLY",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "analytics",
+                                "trends"
+                            ],
+                            "query": [
+                                {
+                                    "key": "period",
+                                    "value": "WEEKLY"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Trends (Daily)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/analytics/trends?period=DAILY",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "analytics",
+                                "trends"
+                            ],
+                            "query": [
+                                {
+                                    "key": "period",
+                                    "value": "DAILY"
+                                }
                             ]
                         }
                     }

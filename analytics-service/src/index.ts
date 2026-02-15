@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import analyticsRoutes from './routes/analyticsRoutes';
 
 dotenv.config();
 
@@ -32,26 +33,8 @@ app.get('/health', (req: Request, res: Response) => {
     });
 });
 
-// Placeholder routes
-app.get('/api/analytics/dashboard', (req: Request, res: Response) => {
-    res.status(200).json({
-        success: true,
-        message: 'Analytics service is running - implementation coming soon',
-        data: {
-            totalHabits: 0,
-            completionRate: 0,
-            currentStreak: 0
-        }
-    });
-});
-
-app.get('/api/analytics/trends', (req: Request, res: Response) => {
-    res.status(200).json({
-        success: true,
-        message: 'Trends endpoint - implementation coming soon',
-        data: []
-    });
-});
+// Mount routes
+app.use('/api', analyticsRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

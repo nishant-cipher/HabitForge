@@ -45,6 +45,7 @@ app.use('/api/auth', rateLimiter, userServiceProxy);
 // Protected routes (authentication required)
 app.use('/api/users', authenticate, rateLimiter, userServiceProxy);
 app.use('/api/habits', authenticate, rateLimiter, habitServiceProxy);
+app.use('/api/gamification', authenticate, rateLimiter, habitServiceProxy);
 app.use('/api/clubs', authenticate, rateLimiter, clubServiceProxy);
 app.use('/api/analytics', authenticate, rateLimiter, analyticsServiceProxy);
 
