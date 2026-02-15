@@ -19,7 +19,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', authRoutes); // For profile endpoints
 
 // Health check
 app.get('/health', async (req: Request, res: Response) => {

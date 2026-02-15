@@ -10,16 +10,19 @@ const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '7d';
  * Generate JWT tokens
  */
 function generateTokens(userId: string, email: string, mode: string) {
+    const payload = { userId, email, mode };
+    const secret = JWT_SECRET as jwt.Secret;
+
     const accessToken = jwt.sign(
-        { userId, email, mode },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRES_IN }
+        payload,
+        secret,
+        { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions
     );
 
     const refreshToken = jwt.sign(
-        { userId, email, mode },
-        JWT_SECRET,
-        { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
+        payload,
+        secret,
+        { expiresIn: REFRESH_TOKEN_EXPIRES_IN } as jwt.SignOptions
     );
 
     return { accessToken, refreshToken };
@@ -86,19 +89,19 @@ export async function register(req: Request, res: Response, next: NextFunction) 
  */
 export async function login(req: Request, res: Response, next: NextFunction) {
     try {
-        const { email, password } = req.body;
+        const { email, username, password } = req.body;
 
-        // Validation
-        if (!email || !password) {
+        // Validation - accept either email or username
+        if ((!email && !username) || !password) {
             return res.status(400).json({
                 success: false,
-                message: 'Email and password are required'
+                message: 'Email/username and password are required'
             });
         }
 
-        // Login user
+        // Login user (pass both email and username, service will handle)
         const authData = await authService.loginUser(
-            { email, password },
+            { email, username, password },
             generateTokens
         );
 

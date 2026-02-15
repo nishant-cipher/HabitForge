@@ -27,12 +27,16 @@ async function forwardRequest(
             },
             data: body,
             params: query,
+            timeout: 30000, // 30 second timeout
             validateStatus: () => true // Don't throw on any status
         });
 
         return response;
     } catch (error: any) {
-        console.error(`Error forwarding to ${serviceUrl}:`, error.message);
+        console.error(`Error forwarding to ${serviceUrl}${path}:`, error.message);
+        if (error.code === 'ECONNREFUSED') {
+            throw new Error(`Service at ${serviceUrl} is not available`);
+        }
         throw error;
     }
 }
@@ -43,11 +47,15 @@ async function forwardRequest(
 export function createServiceProxy(serviceUrl: string) {
     return async (req: Request, res: Response) => {
         try {
-            const path = req.path;
+            // Use originalUrl to get the full path including mount point
+            const path = req.originalUrl;
             const method = req.method;
             const headers = req.headers;
             const body = req.body;
             const query = req.query;
+
+            console.log(`Proxying ${method} ${path} to ${serviceUrl}${path}`);
+            console.log(`Body:`, JSON.stringify(body));
 
             const response = await forwardRequest(
                 serviceUrl,
@@ -58,9 +66,12 @@ export function createServiceProxy(serviceUrl: string) {
                 query
             );
 
+            console.log(`Response status: ${response.status}`);
+
             // Forward response
             res.status(response.status).json(response.data);
         } catch (error: any) {
+            console.error(`Proxy error:`, error.message);
             res.status(503).json({
                 success: false,
                 message: 'Service unavailable',
