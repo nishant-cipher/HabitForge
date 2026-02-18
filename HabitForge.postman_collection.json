@@ -1,39 +1,112 @@
 {
     "info": {
-        "name": "HabitForge Complete API",
-        "description": "Complete Postman collection for all HabitForge microservices via API Gateway",
+        "name": "HabitForge Complete API (Docker Desktop)",
+        "description": "Complete Postman collection for all HabitForge microservices via API Gateway running on Docker Desktop. Base URL: http://localhost:3000",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "variable": [
         {
             "key": "baseUrl",
             "value": "http://localhost:3000",
-            "type": "string"
+            "type": "string",
+            "description": "API Gateway URL (Docker Desktop)"
         },
         {
             "key": "accessToken",
             "value": "",
-            "type": "string"
+            "type": "string",
+            "description": "JWT access token (auto-populated on login/register)"
+        },
+        {
+            "key": "refreshToken",
+            "value": "",
+            "type": "string",
+            "description": "JWT refresh token (auto-populated on login/register)"
         },
         {
             "key": "habitId",
             "value": "",
-            "type": "string"
+            "type": "string",
+            "description": "Habit ID (auto-populated on create habit)"
         },
         {
             "key": "clubId",
             "value": "",
-            "type": "string"
+            "type": "string",
+            "description": "Club ID (auto-populated on create club)"
         },
         {
             "key": "clubHabitId",
             "value": "",
-            "type": "string"
+            "type": "string",
+            "description": "Club Habit/Task ID (auto-populated on add club task)"
         }
     ],
     "item": [
         {
-            "name": "Authentication",
+            "name": "🏥 Health Checks",
+            "item": [
+                {
+                    "name": "API Gateway Health",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/health",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "User Service Health (Direct)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:3001/health",
+                            "raw": "http://localhost:3001/health"
+                        }
+                    }
+                },
+                {
+                    "name": "Habit Service Health (Direct)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:3002/health"
+                        }
+                    }
+                },
+                {
+                    "name": "Club Service Health (Direct)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:3003/health"
+                        }
+                    }
+                },
+                {
+                    "name": "Analytics Service Health (Direct)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "http://localhost:3004/health"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "🔐 Authentication",
             "item": [
                 {
                     "name": "Register User",
@@ -44,8 +117,13 @@
                                 "exec": [
                                     "if (pm.response.code === 201) {",
                                     "    const response = pm.response.json();",
-                                    "    pm.collectionVariables.set('accessToken', response.data.accessToken);",
-                                    "    console.log('✅ Access token saved');",
+                                    "    const data = response.data;",
+                                    "    pm.collectionVariables.set('accessToken', data.accessToken);",
+                                    "    pm.collectionVariables.set('refreshToken', data.refreshToken);",
+                                    "    console.log('✅ Registered! Access token saved.');",
+                                    "    pm.test('Registration successful', () => pm.response.to.have.status(201));",
+                                    "    pm.test('Has accessToken', () => pm.expect(data.accessToken).to.be.a('string'));",
+                                    "    pm.test('Has user object', () => pm.expect(data.user).to.be.an('object'));",
                                     "}"
                                 ],
                                 "type": "text/javascript"
@@ -86,8 +164,12 @@
                                 "exec": [
                                     "if (pm.response.code === 200) {",
                                     "    const response = pm.response.json();",
-                                    "    pm.collectionVariables.set('accessToken', response.data.accessToken);",
-                                    "    console.log('✅ Access token saved');",
+                                    "    const data = response.data;",
+                                    "    pm.collectionVariables.set('accessToken', data.accessToken);",
+                                    "    pm.collectionVariables.set('refreshToken', data.refreshToken);",
+                                    "    console.log('✅ Logged in! Access token saved.');",
+                                    "    pm.test('Login successful', () => pm.response.to.have.status(200));",
+                                    "    pm.test('Has accessToken', () => pm.expect(data.accessToken).to.be.a('string'));",
                                     "}"
                                 ],
                                 "type": "text/javascript"
@@ -128,8 +210,10 @@
                                 "exec": [
                                     "if (pm.response.code === 200) {",
                                     "    const response = pm.response.json();",
-                                    "    pm.collectionVariables.set('accessToken', response.data.accessToken);",
-                                    "    console.log('✅ Access token saved');",
+                                    "    const data = response.data;",
+                                    "    pm.collectionVariables.set('accessToken', data.accessToken);",
+                                    "    pm.collectionVariables.set('refreshToken', data.refreshToken);",
+                                    "    console.log('✅ Logged in! Access token saved.');",
                                     "}"
                                 ],
                                 "type": "text/javascript"
@@ -160,14 +244,54 @@
                             ]
                         }
                     }
+                },
+                {
+                    "name": "Logout",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/logout",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "logout"
+                            ]
+                        }
+                    }
                 }
             ]
         },
         {
-            "name": "User Profile",
+            "name": "👤 User Profile",
             "item": [
                 {
                     "name": "Get Profile",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Get profile successful', () => pm.response.to.have.status(200));",
+                                    "const data = pm.response.json().data;",
+                                    "pm.test('Has user data', () => pm.expect(data).to.have.property('username'));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "GET",
                         "header": [
@@ -188,11 +312,42 @@
                             ]
                         }
                     }
+                },
+                {
+                    "name": "Update Profile",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"username\": \"testuser_updated\",\n  \"mode\": \"AGGRESSIVE\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/users/profile",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users",
+                                "profile"
+                            ]
+                        }
+                    }
                 }
             ]
         },
         {
-            "name": "Habits",
+            "name": "📋 Habits",
             "item": [
                 {
                     "name": "Create Habit",
@@ -203,8 +358,10 @@
                                 "exec": [
                                     "if (pm.response.code === 201) {",
                                     "    const response = pm.response.json();",
-                                    "    pm.collectionVariables.set('habitId', response.data._id);",
-                                    "    console.log('✅ Habit ID saved:', response.data._id);",
+                                    "    const habit = response.data;",
+                                    "    pm.collectionVariables.set('habitId', habit._id);",
+                                    "    console.log('✅ Habit ID saved:', habit._id);",
+                                    "    pm.test('Habit created', () => pm.response.to.have.status(201));",
                                     "}"
                                 ],
                                 "type": "text/javascript"
@@ -241,6 +398,19 @@
                 },
                 {
                     "name": "Get All Habits",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Get habits successful', () => pm.response.to.have.status(200));",
+                                    "const data = pm.response.json().data;",
+                                    "pm.test('Returns array', () => pm.expect(data).to.be.an('array'));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "GET",
                         "header": [
@@ -260,14 +430,106 @@
                             ]
                         }
                     }
+                },
+                {
+                    "name": "Get Single Habit",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/habits/{{habitId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "habits",
+                                "{{habitId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Habit",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Morning Exercise (Updated)\",\n  \"difficulty\": 4\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/habits/{{habitId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "habits",
+                                "{{habitId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Habit",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/habits/{{habitId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "habits",
+                                "{{habitId}}"
+                            ]
+                        }
+                    }
                 }
             ]
         },
         {
-            "name": "Gamification",
+            "name": "🎮 Gamification",
             "item": [
                 {
                     "name": "Log Habit Completion",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Log completion successful', () => pm.response.to.have.status(200));",
+                                    "const data = pm.response.json().data;",
+                                    "if (data) {",
+                                    "    console.log('✅ XP earned:', data.xpEarned, '| Streak:', data.streak);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "POST",
                         "header": [
@@ -345,11 +607,74 @@
                             ]
                         }
                     }
+                },
+                {
+                    "name": "Get All Habit Stats (Dashboard)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Get all stats successful', () => pm.response.to.have.status(200));",
+                                    "const data = pm.response.json().data;",
+                                    "if (data) {",
+                                    "    console.log('📊 Total XP:', data.totalXP, '| Streak:', data.currentStreak);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/gamification/stats/all",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "gamification",
+                                "stats",
+                                "all"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Habit Logs",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/gamification/logs/all",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "gamification",
+                                "logs",
+                                "all"
+                            ]
+                        }
+                    }
                 }
             ]
         },
         {
-            "name": "Clubs",
+            "name": "🏆 Clubs",
             "item": [
                 {
                     "name": "Create Club",
@@ -729,10 +1054,21 @@
             ]
         },
         {
-            "name": "Analytics",
+            "name": "📊 Analytics",
             "item": [
                 {
                     "name": "Get Dashboard",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Analytics dashboard loaded', () => pm.response.to.have.status(200));"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "GET",
                         "header": [
@@ -807,6 +1143,35 @@
                                 {
                                     "key": "period",
                                     "value": "DAILY"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Trends (Monthly)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{accessToken}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/analytics/trends?period=MONTHLY",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "analytics",
+                                "trends"
+                            ],
+                            "query": [
+                                {
+                                    "key": "period",
+                                    "value": "MONTHLY"
                                 }
                             ]
                         }

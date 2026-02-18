@@ -1,0 +1,160 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 150 30% 4%;
+    --foreground: 150 10% 95%;
+
+    --card: 150 20% 7%;
+    --card-foreground: 150 10% 95%;
+
+    --popover: 150 20% 7%;
+    --popover-foreground: 150 10% 95%;
+
+    --primary: 145 85% 50%;
+    --primary-foreground: 150 30% 4%;
+
+    --secondary: 150 15% 12%;
+    --secondary-foreground: 150 10% 85%;
+
+    --muted: 150 15% 12%;
+    --muted-foreground: 150 10% 55%;
+
+    --accent: 145 85% 50%;
+    --accent-foreground: 150 30% 4%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 150 15% 14%;
+    --input: 150 15% 12%;
+    --ring: 145 85% 50%;
+
+    --radius: 0.5rem;
+
+    /* Custom HabitForge tokens */
+    --green: #13ec6a;
+    --green-dim: rgba(19, 236, 106, 0.15);
+    --green-glow: rgba(19, 236, 106, 0.3);
+    --surface: hsl(150 20% 7%);
+    --surface-2: hsl(150 15% 10%);
+    --surface-3: hsl(150 12% 13%);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Manrope', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .green-glow {
+    box-shadow: 0 0 20px var(--green-glow);
+  }
+  .green-text {
+    color: var(--green);
+  }
+  .surface-card {
+    background: var(--surface);
+    border: 1px solid hsl(150 15% 14%);
+    border-radius: 12px;
+  }
+  .surface-card-2 {
+    background: var(--surface-2);
+    border: 1px solid hsl(150 12% 16%);
+    border-radius: 10px;
+  }
+  .badge-green {
+    background: var(--green-dim);
+    color: var(--green);
+    border: 1px solid rgba(19, 236, 106, 0.25);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--green);
+    line-height: 1;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: hsl(150 10% 55%);
+    transition: all 0.15s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .nav-item:hover {
+    background: var(--green-dim);
+    color: var(--green);
+  }
+  .nav-item.active {
+    background: var(--green-dim);
+    color: var(--green);
+    font-weight: 600;
+  }
+  .habit-card {
+    background: var(--surface);
+    border: 1px solid hsl(150 15% 14%);
+    border-radius: 12px;
+    padding: 16px;
+    transition: border-color 0.15s ease;
+  }
+  .habit-card:hover {
+    border-color: rgba(19, 236, 106, 0.25);
+  }
+  .complete-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid hsl(150 15% 20%);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+  .complete-btn:hover {
+    border-color: var(--green);
+    background: var(--green-dim);
+  }
+  .complete-btn.completed {
+    border-color: var(--green);
+    background: var(--green);
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(150 15% 20%);
+    border-radius: 2px;
+  }
+}

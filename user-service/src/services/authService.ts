@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { User, IUser, BehavioralMode } from '../models/User';
 import { Session } from '../models/Session';
 
