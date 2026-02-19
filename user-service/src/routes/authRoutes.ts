@@ -13,7 +13,12 @@ router.post('/logout', authController.logout);
 router.get('/profile', authenticate, authController.getProfile);
 router.put('/profile', authenticate, authController.updateProfile);
 
-// Inter-service routes (for Habit Service to update XP)
+// Grace card routes
+router.post('/me/use-grace-card', authenticate, authController.useGraceCard);
+
+// Inter-service routes (for Habit Service)
 router.put('/:userId/xp', authController.updateUserXP);
+router.post('/:userId/award-grace-card', authController.awardGraceCard);
 
 export default router;
+

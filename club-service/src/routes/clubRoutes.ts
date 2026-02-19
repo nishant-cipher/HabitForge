@@ -10,11 +10,15 @@ router.use(authenticate);
 // Public clubs discovery (no membership required)
 router.get('/clubs/public', clubController.getPublicClubs);
 
+// Join by invite code (no clubId needed — looks up club by code)
+router.post('/clubs/join-by-code', clubController.joinByCode);
+
 // Club management
 router.post('/clubs', clubController.createClub);
 router.get('/clubs', clubController.getUserClubs);
 router.get('/clubs/:clubId', clubController.getClubDetails);
 router.post('/clubs/:clubId/join', clubController.joinClub);
+
 router.post('/clubs/:clubId/leave', clubController.leaveClub);
 router.get('/clubs/:clubId/members', clubController.getClubMembers);
 

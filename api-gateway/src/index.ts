@@ -8,7 +8,8 @@ import {
     userServiceProxy,
     habitServiceProxy,
     clubServiceProxy,
-    analyticsServiceProxy
+    analyticsServiceProxy,
+    taskServiceProxy
 } from './utils/proxy';
 
 // Load environment variables
@@ -48,6 +49,7 @@ app.use('/api/habits', authenticate, rateLimiter, habitServiceProxy);
 app.use('/api/gamification', authenticate, rateLimiter, habitServiceProxy);
 app.use('/api/clubs', authenticate, rateLimiter, clubServiceProxy);
 app.use('/api/analytics', authenticate, rateLimiter, analyticsServiceProxy);
+app.use('/api/tasks', authenticate, rateLimiter, taskServiceProxy);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

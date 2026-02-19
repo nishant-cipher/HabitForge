@@ -1,4 +1,4 @@
-import { Habit, IHabit, HabitCategory, HabitFrequency } from '../models/Habit';
+import { Habit, IHabit, HabitCategory, HabitFrequency, TaskDifficulty } from '../models/Habit';
 
 export interface CreateHabitData {
     userId: string;
@@ -8,6 +8,9 @@ export interface CreateHabitData {
     difficulty: number;
     frequency?: HabitFrequency;
     targetDays?: number[];
+    isTask?: boolean;
+    taskDifficulty?: TaskDifficulty;
+    isTaskCompleted?: boolean;
 }
 
 export interface UpdateHabitData {
@@ -32,7 +35,10 @@ export async function createHabit(data: CreateHabitData): Promise<IHabit> {
         difficulty: data.difficulty,
         frequency: data.frequency || HabitFrequency.DAILY,
         targetDays: data.targetDays,
-        isActive: true
+        isActive: true,
+        isTask: data.isTask || false,
+        taskDifficulty: data.taskDifficulty,
+        isTaskCompleted: data.isTaskCompleted || false,
     });
 
     await habit.save();

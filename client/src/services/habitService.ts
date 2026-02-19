@@ -14,6 +14,7 @@ export interface Habit {
     xpValue?: number
     targetDays?: number[]
     isActive?: boolean
+    isTask?: boolean
     createdAt?: string
 }
 
@@ -28,25 +29,19 @@ export interface HabitLog {
 
 export interface UserStats {
     userId?: string
+    habitId?: string
     currentStreak?: number
     longestStreak?: number
-    totalXP?: number
     totalCompletions?: number
-    level?: number
-    lastCompletionDate?: string
-    habitStats?: Array<{
-        habitId: string
-        name: string
-        currentStreak: number
-        totalCompletions: number
-        lastCompleted?: string
-    }>
+    momentum?: number
+    lastCompletedAt?: string
 }
 
 const habitService = {
     getHabits: async (): Promise<Habit[]> => {
         const response = await api.get("/habits")
-        return response.data.data || response.data || []
+        const all = response.data.data || response.data || []
+        return all.filter((h: any) => !h.isTask)
     },
 
     createHabit: async (data: Partial<Habit>): Promise<Habit> => {
@@ -54,45 +49,40 @@ const habitService = {
         return response.data.data || response.data
     },
 
-    updateHabit: async (id: string, data: Partial<Habit>): Promise<Habit> => {
-        const response = await api.put(`/habits/${id}`, data)
+    updateHabit: async (habitId: string, data: Partial<Habit>): Promise<Habit> => {
+        const response = await api.put(`/habits/${habitId}`, data)
         return response.data.data || response.data
     },
 
-    deleteHabit: async (id: string): Promise<void> => {
-        await api.delete(`/habits/${id}`)
+    deleteHabit: async (habitId: string): Promise<void> => {
+        await api.delete(`/habits/${habitId}`)
     },
 
-    logHabit: async (id: string, note?: string): Promise<any> => {
-        const response = await api.post(`/gamification/${id}/log`, { note })
+    logHabit: async (habitId: string, notes?: string): Promise<{ log: HabitLog; xpEarned: number }> => {
+        const response = await api.post(`/habits/${habitId}/log`, { notes })
         return response.data.data || response.data
     },
 
-    getStats: async (): Promise<UserStats> => {
-        try {
-            const response = await api.get("/gamification/stats/all")
-            return response.data.data || {}
-        } catch {
-            return {}
-        }
+    getHabitLogs: async (habitId?: string): Promise<HabitLog[]> => {
+        const url = habitId ? `/habits/${habitId}/logs` : "/habits/logs"
+        const response = await api.get(url)
+        return response.data.data || response.data || []
     },
 
-    getLogs: async (): Promise<HabitLog[]> => {
-        try {
-            const response = await api.get("/gamification/logs/all")
-            return response.data.data || []
-        } catch {
-            return []
-        }
+    getHabitStats: async (habitId: string) => {
+        const response = await api.get(`/habits/${habitId}/stats`)
+        return response.data.data || response.data
     },
 
-    getHabitLogs: async (habitId: string): Promise<HabitLog[]> => {
-        try {
-            const response = await api.get(`/gamification/${habitId}/logs`)
-            return response.data.data || []
-        } catch {
-            return []
-        }
+    getAllStats: async () => {
+        const response = await api.get("/habits/stats")
+        return response.data.data || response.data || []
+    },
+
+    // Grace card — calls user-service via gateway
+    useGraceCard: async (type: "silver" | "gold"): Promise<{ graceSilverCards: number; graceGoldCards: number }> => {
+        const response = await api.post("/users/me/use-grace-card", { type })
+        return response.data.data || response.data
     },
 }
 

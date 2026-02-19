@@ -29,10 +29,15 @@ export function Clubs() {
     // Search state
     const [searchQuery, setSearchQuery] = useState("")
 
-    // Join modal state (for private clubs)
+    // Join modal state (for private clubs via card)
     const [joinModal, setJoinModal] = useState<JoinModalState | null>(null)
     const [inviteCodeInput, setInviteCodeInput] = useState("")
     const [joinError, setJoinError] = useState("")
+
+    // Global join-by-code modal
+    const [showJoinByCode, setShowJoinByCode] = useState(false)
+    const [globalCode, setGlobalCode] = useState("")
+    const [globalCodeError, setGlobalCodeError] = useState("")
 
     // Fetch public clubs (explore grid)
     const { data: publicClubs = [], isLoading: publicLoading } = useQuery({
@@ -91,6 +96,19 @@ export function Clubs() {
     const leaveMutation = useMutation({
         mutationFn: (clubId: string) => clubService.leaveClub(clubId),
         onSuccess: () => queryClient.invalidateQueries({ queryKey: ["clubs"] }),
+    })
+
+    const joinByCodeMutation = useMutation({
+        mutationFn: (code: string) => clubService.joinByInviteCode(code),
+        onSuccess: (_club) => {
+            queryClient.invalidateQueries({ queryKey: ["clubs"] })
+            setShowJoinByCode(false)
+            setGlobalCode("")
+            setGlobalCodeError("")
+        },
+        onError: (err: any) => {
+            setGlobalCodeError(err?.response?.data?.message || "Invalid invite code")
+        },
     })
 
     const handleJoinPublic = (club: Club) => {
@@ -208,13 +226,22 @@ export function Clubs() {
                         Join accountability groups and compete with others
                     </p>
                 </div>
-                <button
-                    onClick={() => setShowCreate(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
-                    style={{ background: "var(--green)", color: "hsl(150 30% 4%)" }}
-                >
-                    <Plus className="h-4 w-4" /> Create Club
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => { setShowJoinByCode(true); setGlobalCode(""); setGlobalCodeError("") }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
+                        style={{ background: "hsl(150 15% 11%)", border: "1px solid hsl(150 15% 18%)", color: "hsl(150 10% 75%)" }}
+                    >
+                        <Lock className="h-4 w-4" /> Join by Code
+                    </button>
+                    <button
+                        onClick={() => setShowCreate(true)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
+                        style={{ background: "var(--green)", color: "hsl(150 30% 4%)" }}
+                    >
+                        <Plus className="h-4 w-4" /> Create Club
+                    </button>
+                </div>
             </div>
 
             {/* Search bar */}
@@ -470,6 +497,53 @@ export function Clubs() {
                                         {joinMutation.isPending ? "Joining..." : "Join Club"}
                                     </button>
                                     <button onClick={() => { setJoinModal(null); setInviteCodeInput(""); setJoinError("") }}
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold"
+                                        style={{ background: "hsl(150 15% 12%)", color: "hsl(150 10% 70%)" }}>
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {/* ── Global Join by Code Modal ── */}
+                    {showJoinByCode && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.8)" }}>
+                            <div className="surface-card p-6 w-full max-w-sm mx-4 rounded-2xl"
+                                style={{ border: "1px solid rgba(19,236,106,0.25)", boxShadow: "0 0 30px rgba(19,236,106,0.1)" }}>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-base font-bold" style={{ color: "hsl(150 10% 90%)" }}>
+                                        Join Club by Invite Code
+                                    </h2>
+                                    <button onClick={() => { setShowJoinByCode(false); setGlobalCode(""); setGlobalCodeError("") }}
+                                        style={{ color: "hsl(150 10% 50%)" }}>
+                                        <X className="h-5 w-5" />
+                                    </button>
+                                </div>
+                                <p className="text-xs mb-4" style={{ color: "hsl(150 10% 50%)" }}>
+                                    Enter the invite code for a private club to request membership.
+                                </p>
+                                <input
+                                    autoFocus
+                                    value={globalCode}
+                                    onChange={e => { setGlobalCode(e.target.value.toUpperCase()); setGlobalCodeError("") }}
+                                    onKeyDown={e => { if (e.key === "Enter" && globalCode.trim()) joinByCodeMutation.mutate(globalCode.trim()) }}
+                                    placeholder="e.g. ABC123"
+                                    maxLength={8}
+                                    className="w-full px-3 py-3 rounded-lg text-center text-xl font-mono font-bold tracking-widest outline-none mb-3"
+                                    style={{ background: "hsl(150 15% 10%)", border: "1px solid hsl(150 15% 16%)", color: "hsl(150 10% 90%)" }}
+                                />
+                                {globalCodeError && (
+                                    <p className="text-xs mb-3" style={{ color: "#ef4444" }}>{globalCodeError}</p>
+                                )}
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => joinByCodeMutation.mutate(globalCode.trim())}
+                                        disabled={!globalCode.trim() || joinByCodeMutation.isPending}
+                                        className="flex-1 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
+                                        style={{ background: "var(--green)", color: "hsl(150 30% 4%)" }}>
+                                        {joinByCodeMutation.isPending ? "Joining..." : "Join Club"}
+                                    </button>
+                                    <button onClick={() => { setShowJoinByCode(false); setGlobalCode(""); setGlobalCodeError("") }}
                                         className="px-4 py-2 rounded-lg text-sm font-semibold"
                                         style={{ background: "hsl(150 15% 12%)", color: "hsl(150 10% 70%)" }}>
                                         Cancel

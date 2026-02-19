@@ -5,6 +5,7 @@ const USER_SERVICE_URL = process.env.USER_SERVICE_URL || 'http://localhost:3001'
 const HABIT_SERVICE_URL = process.env.HABIT_SERVICE_URL || 'http://localhost:3002';
 const CLUB_SERVICE_URL = process.env.CLUB_SERVICE_URL || 'http://localhost:3003';
 const ANALYTICS_SERVICE_URL = process.env.ANALYTICS_SERVICE_URL || 'http://localhost:3004';
+const TASK_SERVICE_URL = process.env.TASK_SERVICE_URL || 'http://localhost:3005';
 
 /**
  * Forward request to a service
@@ -86,3 +87,4 @@ export const userServiceProxy = createServiceProxy(USER_SERVICE_URL);
 export const habitServiceProxy = createServiceProxy(HABIT_SERVICE_URL);
 export const clubServiceProxy = createServiceProxy(CLUB_SERVICE_URL);
 export const analyticsServiceProxy = createServiceProxy(ANALYTICS_SERVICE_URL);
+export const taskServiceProxy = createServiceProxy(TASK_SERVICE_URL);

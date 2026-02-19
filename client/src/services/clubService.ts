@@ -116,6 +116,11 @@ const clubService = {
         await api.post(`/clubs/${clubId}/join`, inviteCode ? { inviteCode } : {})
     },
 
+    joinByInviteCode: async (inviteCode: string): Promise<Club> => {
+        const response = await api.post("/clubs/join-by-code", { inviteCode })
+        return response.data.data || response.data
+    },
+
     leaveClub: async (clubId: string): Promise<void> => {
         await api.post(`/clubs/${clubId}/leave`)
     },

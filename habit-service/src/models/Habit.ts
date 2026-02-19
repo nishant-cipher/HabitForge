@@ -16,6 +16,20 @@ export enum HabitFrequency {
     CUSTOM = 'CUSTOM'
 }
 
+export enum TaskDifficulty {
+    EASY = 'EASY',
+    MEDIUM = 'MEDIUM',
+    HARD = 'HARD',
+    EPIC = 'EPIC'
+}
+
+export const TASK_XP: Record<string, number> = {
+    EASY: 10,
+    MEDIUM: 25,
+    HARD: 50,
+    EPIC: 100
+};
+
 export interface IHabit extends Document {
     userId: string;
     name: string;
@@ -25,6 +39,10 @@ export interface IHabit extends Document {
     frequency: HabitFrequency;
     targetDays?: number[]; // For weekly habits: [0-6] (Sunday-Saturday)
     isActive: boolean;
+    // Task fields
+    isTask: boolean;
+    taskDifficulty?: TaskDifficulty;
+    isTaskCompleted: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -75,6 +93,18 @@ const HabitSchema = new Schema<IHabit>({
     isActive: {
         type: Boolean,
         default: true
+    },
+    isTask: {
+        type: Boolean,
+        default: false
+    },
+    taskDifficulty: {
+        type: String,
+        enum: Object.values(TaskDifficulty)
+    },
+    isTaskCompleted: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true

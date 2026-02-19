@@ -137,7 +137,7 @@ export async function getUserById(userId: string): Promise<IUser | null> {
  */
 export async function updateUserProfile(
     userId: string,
-    updates: { username?: string; mode?: BehavioralMode }
+    updates: { username?: string; mode?: string; modeChangedAt?: Date }
 ): Promise<IUser | null> {
     // If username is being updated, check if it's available
     if (updates.username) {
@@ -156,6 +156,23 @@ export async function updateUserProfile(
         { new: true }
     );
 }
+
+/**
+ * Award or use grace cards (+1 or -1)
+ */
+export async function updateGraceCards(
+    userId: string,
+    field: 'graceSilverCards' | 'graceGoldCards',
+    delta: number
+): Promise<IUser | null> {
+    return User.findByIdAndUpdate(
+        userId,
+        { $inc: { [field]: delta } },
+        { new: true }
+    );
+}
+
+
 
 /**
  * Update user XP and level

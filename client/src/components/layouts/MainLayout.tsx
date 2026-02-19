@@ -1,12 +1,14 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
-import { LayoutDashboard, CheckSquare, Users, BarChart2, Settings, Zap, LogOut } from "lucide-react"
+import { LayoutDashboard, CheckSquare, Users, BarChart2, Settings, Zap, LogOut, ListTodo, Sliders } from "lucide-react"
 
 const navItems = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/habits", label: "Habits", icon: CheckSquare },
+    { to: "/tasks", label: "Tasks", icon: ListTodo },
     { to: "/clubs", label: "Clubs", icon: Users },
     { to: "/analytics", label: "Stats", icon: BarChart2 },
+    { to: "/mode", label: "Mode", icon: Sliders },
 ]
 
 const modeColors: Record<string, string> = {

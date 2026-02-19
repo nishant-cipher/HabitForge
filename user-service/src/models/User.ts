@@ -11,8 +11,11 @@ export interface IUser extends Document {
     username: string;
     passwordHash: string;
     mode: BehavioralMode;
+    modeChangedAt?: Date;
     xp: number;
     level: number;
+    graceSilverCards: number;
+    graceGoldCards: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -43,6 +46,9 @@ const UserSchema = new Schema<IUser>({
         enum: Object.values(BehavioralMode),
         default: BehavioralMode.BALANCED
     },
+    modeChangedAt: {
+        type: Date
+    },
     xp: {
         type: Number,
         default: 0,
@@ -52,6 +58,16 @@ const UserSchema = new Schema<IUser>({
         type: Number,
         default: 1,
         min: 1
+    },
+    graceSilverCards: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    graceGoldCards: {
+        type: Number,
+        default: 0,
+        min: 0
     }
 }, {
     timestamps: true

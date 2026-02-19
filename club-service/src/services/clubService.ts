@@ -143,6 +143,19 @@ export async function joinClub(clubId: string, userId: string, username: string,
 }
 
 /**
+ * Join a private club by invite code alone (without knowing the club ID)
+ */
+export async function joinClubByCode(inviteCode: string, userId: string, username: string) {
+    // Find club by invite code
+    const club = await Club.findOne({ inviteCode: inviteCode.toUpperCase(), isPublic: false });
+    if (!club) {
+        throw new Error('Invalid invite code. Please check the code and try again.');
+    }
+    // Delegate to existing joinClub with the code (which validates and adds membership)
+    return joinClub(club._id.toString(), userId, username, inviteCode);
+}
+
+/**
  * Leave a club
  */
 export async function leaveClub(clubId: string, userId: string, username: string) {

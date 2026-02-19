@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as habitService from '../services/habitService';
-import { HabitCategory, HabitFrequency } from '../models/Habit';
+import { HabitCategory, HabitFrequency, TaskDifficulty } from '../models/Habit';
 
 /**
  * Create a new habit
@@ -8,7 +8,7 @@ import { HabitCategory, HabitFrequency } from '../models/Habit';
 export async function createHabit(req: Request, res: Response) {
     try {
         const userId = (req as any).user?.userId;
-        const { name, description, category, difficulty, frequency, targetDays } = req.body;
+        const { name, description, category, difficulty, frequency, targetDays, isTask, taskDifficulty } = req.body;
 
         if (!userId) {
             return res.status(401).json({
@@ -18,17 +18,26 @@ export async function createHabit(req: Request, res: Response) {
         }
 
         // Validation
-        if (!name || !category || !difficulty) {
+        if (!name || !category || difficulty === undefined) {
             return res.status(400).json({
                 success: false,
                 message: 'Name, category, and difficulty are required'
             });
         }
 
-        if (difficulty < 1 || difficulty > 5) {
+        const numDifficulty = Number(difficulty);
+        if (numDifficulty < 1 || numDifficulty > 5) {
             return res.status(400).json({
                 success: false,
                 message: 'Difficulty must be between 1 and 5'
+            });
+        }
+
+        // Validate taskDifficulty if this is a task
+        if (isTask && taskDifficulty && !Object.values(TaskDifficulty).includes(taskDifficulty)) {
+            return res.status(400).json({
+                success: false,
+                message: `taskDifficulty must be one of: ${Object.values(TaskDifficulty).join(', ')}`
             });
         }
 
@@ -37,14 +46,17 @@ export async function createHabit(req: Request, res: Response) {
             name,
             description,
             category,
-            difficulty,
+            difficulty: numDifficulty,
             frequency,
-            targetDays
+            targetDays,
+            isTask: isTask === true,
+            taskDifficulty: isTask ? taskDifficulty : undefined,
+            isTaskCompleted: false,
         });
 
         res.status(201).json({
             success: true,
-            message: 'Habit created successfully',
+            message: isTask ? 'Task created successfully' : 'Habit created successfully',
             data: habit
         });
     } catch (error: any) {

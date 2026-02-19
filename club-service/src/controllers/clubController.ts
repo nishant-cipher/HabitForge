@@ -142,6 +142,32 @@ export async function joinClub(req: AuthRequest, res: Response, next: NextFuncti
 }
 
 /**
+ * Join a club by invite code only (global join — private clubs not visible in explore)
+ */
+export async function joinByCode(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+        const { inviteCode } = req.body;
+        const userId = req.user!.userId;
+        const token = req.headers.authorization!.substring(7);
+
+        if (!inviteCode || inviteCode.trim().length === 0) {
+            return res.status(400).json({ success: false, message: 'Invite code is required' });
+        }
+
+        const username = await getUsername(userId, token);
+        const club = await clubService.joinClubByCode(inviteCode.trim().toUpperCase(), userId, username);
+
+        res.status(200).json({
+            success: true,
+            message: `Joined ${club.name} successfully!`,
+            data: club
+        });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message || 'Failed to join club' });
+    }
+}
+
+/**
  * Leave a club
  */
 export async function leaveClub(req: AuthRequest, res: Response, next: NextFunction) {
