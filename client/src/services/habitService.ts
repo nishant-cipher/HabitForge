@@ -12,6 +12,7 @@ export interface Habit {
     longestStreak?: number
     totalCompletions?: number
     xpValue?: number
+    targetDays?: number[]
     isActive?: boolean
     createdAt?: string
 }

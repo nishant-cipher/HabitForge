@@ -25,7 +25,7 @@ async function getUsername(userId: string, token: string): Promise<string> {
  */
 export async function createClub(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-        const { name, description } = req.body;
+        const { name, description, category, isPublic } = req.body;
         const userId = req.user!.userId;
         const token = req.headers.authorization!.substring(7);
 
@@ -37,7 +37,12 @@ export async function createClub(req: AuthRequest, res: Response, next: NextFunc
         }
 
         const username = await getUsername(userId, token);
-        const club = await clubService.createClub(userId, username, { name, description });
+        const club = await clubService.createClub(userId, username, {
+            name,
+            description,
+            category,
+            isPublic: isPublic !== false && isPublic !== 'false'
+        });
 
         res.status(201).json({
             success: true,
@@ -48,6 +53,24 @@ export async function createClub(req: AuthRequest, res: Response, next: NextFunc
         res.status(400).json({
             success: false,
             message: error.message || 'Failed to create club'
+        });
+    }
+}
+
+/**
+ * Get all public clubs
+ */
+export async function getPublicClubs(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+        const clubs = await clubService.getPublicClubs();
+        res.status(200).json({
+            success: true,
+            data: clubs
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to get public clubs'
         });
     }
 }
@@ -98,11 +121,12 @@ export async function getClubDetails(req: AuthRequest, res: Response, next: Next
 export async function joinClub(req: AuthRequest, res: Response, next: NextFunction) {
     try {
         const { clubId } = req.params;
+        const { inviteCode } = req.body;
         const userId = req.user!.userId;
         const token = req.headers.authorization!.substring(7);
 
         const username = await getUsername(userId, token);
-        const club = await clubService.joinClub(clubId, userId, username);
+        const club = await clubService.joinClub(clubId, userId, username, inviteCode);
 
         res.status(200).json({
             success: true,

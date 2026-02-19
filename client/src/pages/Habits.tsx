@@ -4,13 +4,15 @@ import { habitService, type Habit } from "@/services/habitService"
 import { Plus, Flame, Zap, Pencil, Trash2, CheckCircle2, Lock, Shield, Swords } from "lucide-react"
 
 const CATEGORIES = ["HEALTH", "LEARNING", "PRODUCTIVITY", "SOCIAL", "MINDFULNESS", "OTHER"]
-const FREQUENCIES = ["DAILY", "WEEKLY", "MONTHLY"]
+const FREQUENCIES = ["DAILY", "WEEKLY", "CUSTOM"]
 const DIFFICULTIES = [
     { label: "Easy", value: 1 },
     { label: "Medium", value: 2 },
     { label: "Hard", value: 3 },
     { label: "Extreme", value: 4 },
 ]
+
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 const categoryColors: Record<string, string> = {
     HEALTH: "#13ec6a", LEARNING: "#3b82f6", PRODUCTIVITY: "#f59e0b",
@@ -28,15 +30,17 @@ const modes = [
     { id: "COMPETITIVE", label: "Competitive Mode", icon: Swords, desc: "Global leaderboard. 2x XP multiplier. Zero tolerance for missed habits.", color: "#3b82f6" },
 ]
 
+const emptyForm = {
+    name: "", description: "", category: "HEALTH", frequency: "DAILY",
+    difficulty: 2, targetValue: 1, targetDays: [] as number[],
+}
+
 export function Habits() {
     const queryClient = useQueryClient()
     const [showCreate, setShowCreate] = useState(false)
     const [editingHabit, setEditingHabit] = useState<Habit | null>(null)
     const [completingId, setCompletingId] = useState<string | null>(null)
-    const [form, setForm] = useState({
-        name: "", description: "", category: "HEALTH", frequency: "DAILY",
-        difficulty: 2, targetValue: 1,
-    })
+    const [form, setForm] = useState(emptyForm)
 
     const { data: habits = [], isLoading } = useQuery({
         queryKey: ["habits"],
@@ -49,12 +53,17 @@ export function Habits() {
         staleTime: 30_000,
     })
 
+    const closeForm = () => {
+        setShowCreate(false)
+        setEditingHabit(null)
+        setForm(emptyForm)
+    }
+
     const createMutation = useMutation({
         mutationFn: (data: Partial<Habit>) => habitService.createHabit(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["habits"] })
-            setShowCreate(false)
-            setForm({ name: "", description: "", category: "HEALTH", frequency: "DAILY", difficulty: 2, targetValue: 1 })
+            closeForm()
         },
     })
 
@@ -62,7 +71,7 @@ export function Habits() {
         mutationFn: ({ id, data }: { id: string; data: Partial<Habit> }) => habitService.updateHabit(id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["habits"] })
-            setEditingHabit(null)
+            closeForm()  // Fix: also close form and reset on successful update
         },
     })
 
@@ -89,10 +98,15 @@ export function Habits() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
+        const payload = { ...form }
+        // Only send targetDays if frequency is CUSTOM
+        if (form.frequency !== "CUSTOM") {
+            payload.targetDays = []
+        }
         if (editingHabit) {
-            updateMutation.mutate({ id: editingHabit._id, data: form })
+            updateMutation.mutate({ id: editingHabit._id, data: payload })
         } else {
-            createMutation.mutate(form)
+            createMutation.mutate(payload)
         }
     }
 
@@ -103,8 +117,23 @@ export function Habits() {
             category: habit.category, frequency: habit.frequency,
             difficulty: typeof habit.difficulty === 'number' ? habit.difficulty : 2,
             targetValue: habit.targetValue || 1,
+            targetDays: habit.targetDays || [],
         })
         setShowCreate(true)
+    }
+
+    const toggleDay = (day: number) => {
+        setForm(f => ({
+            ...f,
+            targetDays: f.targetDays.includes(day)
+                ? f.targetDays.filter(d => d !== day)
+                : [...f.targetDays, day].sort((a, b) => a - b)
+        }))
+    }
+
+    const formatTargetDays = (days: number[]) => {
+        if (!days || days.length === 0) return ""
+        return days.map(d => DAYS[d]).join(", ")
     }
 
     return (
@@ -120,7 +149,15 @@ export function Habits() {
                     </p>
                 </div>
                 <button
-                    onClick={() => { setEditingHabit(null); setShowCreate(!showCreate) }}
+                    onClick={() => {
+                        if (showCreate && !editingHabit) {
+                            closeForm()
+                        } else {
+                            setEditingHabit(null)
+                            setForm(emptyForm)
+                            setShowCreate(true)
+                        }
+                    }}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all"
                     style={{ background: "var(--green)", color: "hsl(150 30% 4%)" }}
                 >
@@ -176,13 +213,48 @@ export function Habits() {
                                         <label className="text-xs font-semibold mb-1 block" style={{ color: "hsl(150 10% 55%)" }}>Frequency</label>
                                         <select
                                             value={form.frequency}
-                                            onChange={e => setForm(f => ({ ...f, frequency: e.target.value }))}
+                                            onChange={e => setForm(f => ({ ...f, frequency: e.target.value, targetDays: [] }))}
                                             className="w-full px-3 py-2 rounded-lg text-sm outline-none"
                                             style={{ background: "hsl(150 15% 10%)", border: "1px solid hsl(150 15% 16%)", color: "hsl(150 10% 90%)" }}
                                         >
                                             {FREQUENCIES.map(f => <option key={f} value={f}>{f}</option>)}
                                         </select>
                                     </div>
+
+                                    {/* Custom Days Picker — shown only when CUSTOM frequency is selected */}
+                                    {form.frequency === "CUSTOM" && (
+                                        <div className="col-span-2">
+                                            <label className="text-xs font-semibold mb-2 block" style={{ color: "hsl(150 10% 55%)" }}>
+                                                Select Days *
+                                            </label>
+                                            <div className="flex gap-2 flex-wrap">
+                                                {DAYS.map((day, idx) => {
+                                                    const selected = form.targetDays.includes(idx)
+                                                    return (
+                                                        <button
+                                                            type="button"
+                                                            key={day}
+                                                            onClick={() => toggleDay(idx)}
+                                                            className="w-10 h-10 rounded-lg text-xs font-bold transition-all"
+                                                            style={{
+                                                                background: selected ? "var(--green)" : "hsl(150 15% 10%)",
+                                                                color: selected ? "hsl(150 30% 4%)" : "hsl(150 10% 55%)",
+                                                                border: selected ? "none" : "1px solid hsl(150 15% 16%)",
+                                                            }}
+                                                        >
+                                                            {day}
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
+                                            {form.targetDays.length === 0 && (
+                                                <p className="text-xs mt-1" style={{ color: "hsl(0 60% 55%)" }}>
+                                                    Please select at least one day
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+
                                     <div>
                                         <label className="text-xs font-semibold mb-1 block" style={{ color: "hsl(150 10% 55%)" }}>Difficulty</label>
                                         <select
@@ -207,12 +279,17 @@ export function Habits() {
                                 </div>
                                 <div className="flex gap-2 mt-1">
                                     <button type="submit"
-                                        disabled={createMutation.isPending || updateMutation.isPending}
-                                        className="px-4 py-2 rounded-lg text-sm font-semibold"
+                                        disabled={
+                                            createMutation.isPending || updateMutation.isPending ||
+                                            (form.frequency === "CUSTOM" && form.targetDays.length === 0)
+                                        }
+                                        className="px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
                                         style={{ background: "var(--green)", color: "hsl(150 30% 4%)" }}>
-                                        {editingHabit ? "Update" : "Create Protocol"}
+                                        {editingHabit
+                                            ? (updateMutation.isPending ? "Saving..." : "Update Protocol")
+                                            : (createMutation.isPending ? "Creating..." : "Create Protocol")}
                                     </button>
-                                    <button type="button" onClick={() => { setShowCreate(false); setEditingHabit(null) }}
+                                    <button type="button" onClick={closeForm}
                                         className="px-4 py-2 rounded-lg text-sm font-semibold"
                                         style={{ background: "hsl(150 15% 12%)", color: "hsl(150 10% 70%)" }}>
                                         Cancel
@@ -220,7 +297,9 @@ export function Habits() {
                                 </div>
                                 {(createMutation.error || updateMutation.error) && (
                                     <div className="text-xs text-red-400 mt-1">
-                                        {(createMutation.error as any)?.response?.data?.message || "Failed to save habit"}
+                                        {(createMutation.error as any)?.response?.data?.message ||
+                                            (updateMutation.error as any)?.response?.data?.message ||
+                                            "Failed to save habit"}
                                     </div>
                                 )}
                             </form>
@@ -279,7 +358,9 @@ export function Habits() {
                                                         <Zap className="h-3 w-3" /> {habit.xpValue || 10} XP
                                                     </span>
                                                     <span className="text-xs" style={{ color: "hsl(150 10% 45%)" }}>
-                                                        {habit.frequency}
+                                                        {habit.frequency === "CUSTOM" && habit.targetDays && habit.targetDays.length > 0
+                                                            ? formatTargetDays(habit.targetDays)
+                                                            : habit.frequency}
                                                     </span>
                                                 </div>
                                             </div>

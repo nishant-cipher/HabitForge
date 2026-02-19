@@ -7,6 +7,9 @@ const router = express.Router();
 // All routes require authentication
 router.use(authenticate);
 
+// Public clubs discovery (no membership required)
+router.get('/clubs/public', clubController.getPublicClubs);
+
 // Club management
 router.post('/clubs', clubController.createClub);
 router.get('/clubs', clubController.getUserClubs);

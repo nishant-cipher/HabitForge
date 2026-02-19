@@ -4,6 +4,9 @@ export interface IClub extends Document {
     name: string;
     description: string;
     ownerId: string;
+    category: string;
+    isPublic: boolean;
+    inviteCode?: string;
     memberCount: number;
     createdAt: Date;
     updatedAt: Date;
@@ -27,6 +30,19 @@ const ClubSchema = new Schema<IClub>({
         required: true,
         index: true
     },
+    category: {
+        type: String,
+        default: 'OTHER'
+    },
+    isPublic: {
+        type: Boolean,
+        default: true
+    },
+    inviteCode: {
+        type: String,
+        index: true,
+        sparse: true
+    },
     memberCount: {
         type: Number,
         default: 1
@@ -38,5 +54,6 @@ const ClubSchema = new Schema<IClub>({
 // Indexes
 ClubSchema.index({ name: 1 });
 ClubSchema.index({ ownerId: 1 });
+ClubSchema.index({ isPublic: 1 });
 
 export const Club = mongoose.model<IClub>('Club', ClubSchema);

@@ -8,14 +8,36 @@ import axios from 'axios';
 const HABIT_SERVICE_URL = process.env.HABIT_SERVICE_URL || 'http://localhost:3002';
 
 /**
+ * Generate a random alphanumeric invite code
+ */
+function generateInviteCode(length = 6): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < length; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
+
+/**
  * Create a new club
  */
-export async function createClub(ownerId: string, username: string, data: { name: string; description: string }) {
+export async function createClub(
+    ownerId: string,
+    username: string,
+    data: { name: string; description: string; category?: string; isPublic?: boolean }
+) {
+    const isPublic = data.isPublic !== false; // default true
+    const inviteCode = isPublic ? undefined : generateInviteCode();
+
     // Create club
     const club = await Club.create({
         name: data.name,
         description: data.description,
         ownerId,
+        category: data.category || 'OTHER',
+        isPublic,
+        inviteCode,
         memberCount: 1
     });
 
@@ -40,7 +62,14 @@ export async function createClub(ownerId: string, username: string, data: { name
 }
 
 /**
- * Get user's clubs
+ * Get all public clubs
+ */
+export async function getPublicClubs() {
+    return Club.find({ isPublic: true }).sort({ memberCount: -1, createdAt: -1 });
+}
+
+/**
+ * Get user's clubs (clubs the user is a member of)
  */
 export async function getUserClubs(userId: string) {
     const memberships = await Membership.find({ userId });
@@ -71,10 +100,17 @@ export async function getClubDetails(clubId: string) {
 /**
  * Join a club
  */
-export async function joinClub(clubId: string, userId: string, username: string) {
+export async function joinClub(clubId: string, userId: string, username: string, inviteCode?: string) {
     const club = await Club.findById(clubId);
     if (!club) {
         throw new Error('Club not found');
+    }
+
+    // For private clubs, validate invite code
+    if (!club.isPublic) {
+        if (!inviteCode || inviteCode.toUpperCase() !== club.inviteCode) {
+            throw new Error('Invalid invite code');
+        }
     }
 
     // Check if already a member

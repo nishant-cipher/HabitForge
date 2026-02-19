@@ -8,12 +8,24 @@ export interface Club {
     memberCount?: number
     avgConsistency?: number
     isPublic?: boolean
+    inviteCode?: string
+    ownerId?: string
     createdBy?: string
     members?: string[]
     createdAt?: string
+    role?: string
 }
 
 const clubService = {
+    getPublicClubs: async (): Promise<Club[]> => {
+        try {
+            const response = await api.get("/clubs/public")
+            return response.data.data || response.data || []
+        } catch {
+            return []
+        }
+    },
+
     getClubs: async (): Promise<Club[]> => {
         try {
             const response = await api.get("/clubs")
@@ -25,7 +37,7 @@ const clubService = {
 
     getMyClubs: async (): Promise<Club[]> => {
         try {
-            const response = await api.get("/clubs/my")
+            const response = await api.get("/clubs")
             return response.data.data || response.data || []
         } catch {
             return []
@@ -37,8 +49,8 @@ const clubService = {
         return response.data.data || response.data
     },
 
-    joinClub: async (clubId: string): Promise<void> => {
-        await api.post(`/clubs/${clubId}/join`)
+    joinClub: async (clubId: string, inviteCode?: string): Promise<void> => {
+        await api.post(`/clubs/${clubId}/join`, inviteCode ? { inviteCode } : {})
     },
 
     leaveClub: async (clubId: string): Promise<void> => {
