@@ -11,8 +11,8 @@ const categoryColors: Record<string, string> = {
 }
 
 export function Analytics() {
-    const { data: stats } = useQuery({ queryKey: ["stats"], queryFn: habitService.getStats, staleTime: 30_000 })
-    const { data: logs = [] } = useQuery({ queryKey: ["logs"], queryFn: habitService.getLogs, staleTime: 30_000 })
+    const { data: dashboard } = useQuery({ queryKey: ["dashboard"], queryFn: analyticsService.getDashboard, staleTime: 30_000 })
+    const { data: logs = [] } = useQuery({ queryKey: ["logs"], queryFn: () => habitService.getHabitLogs(), staleTime: 30_000 })
     const { data: habits = [] } = useQuery({ queryKey: ["habits"], queryFn: habitService.getHabits })
     useQuery({ queryKey: ["trends"], queryFn: () => analyticsService.getTrends("MONTHLY"), staleTime: 60_000 })
 
@@ -21,7 +21,15 @@ export function Analytics() {
         return acc
     }, {})
 
-    const habitStats = stats?.habitStats || []
+    const dashboardStats = dashboard?.stats || {}
+    const user = dashboard?.user || {}
+    const habitStats = (dashboard?.habits || []).map((h: any) => ({
+        habitId: h._id,
+        name: h.name,
+        currentStreak: h.stats?.currentStreak || 0,
+        totalCompletions: h.stats?.totalCompletions || 0,
+        lastCompleted: h.stats?.lastCompletedAt
+    }))
 
     return (
         <div className="flex flex-col gap-6">
@@ -32,10 +40,10 @@ export function Analytics() {
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                    { label: "Current Streak", value: `${stats?.currentStreak || 0}d`, icon: Flame, color: "#f97316" },
-                    { label: "Longest Streak", value: `${stats?.longestStreak || 0}d`, icon: TrendingUp, color: "var(--green)" },
-                    { label: "Total XP", value: (stats?.totalXP || 0).toLocaleString(), icon: Zap, color: "#f59e0b" },
-                    { label: "Total Completions", value: (stats?.totalCompletions || 0).toLocaleString(), icon: CheckCircle2, color: "#3b82f6" },
+                    { label: "Current Streak", value: `${dashboardStats.currentStreak || 0}d`, icon: Flame, color: "#f97316" },
+                    { label: "Longest Streak", value: `${dashboardStats.longestStreak || 0}d`, icon: TrendingUp, color: "var(--green)" },
+                    { label: "Total XP", value: (user.xp || 0).toLocaleString(), icon: Zap, color: "#f59e0b" },
+                    { label: "Total Completions", value: (dashboardStats.totalCompletions || 0).toLocaleString(), icon: CheckCircle2, color: "#3b82f6" },
                 ].map((stat) => (
                     <div key={stat.label} className="surface-card p-5 flex items-center gap-4">
                         <div className="flex h-10 w-10 items-center justify-center rounded-xl flex-shrink-0"

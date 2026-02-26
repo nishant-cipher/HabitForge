@@ -105,7 +105,7 @@ export function ModeConfig() {
             <div className="mb-8">
                 <div className="flex items-center gap-3 mb-2">
                     <Sliders className="h-6 w-6" style={{ color: "#13ec6a" }} />
-                    <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: "hsl(150 10% 95%)" }}>Habit Engine Mode</h1>
+                    <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: "hsl(150 10% 95%)" }}>HabitForge Mode</h1>
                 </div>
                 <p className="text-sm" style={{ color: "hsl(150 10% 50%)" }}>
                     Configure your behavioural protocol. Changes are locked for <strong style={{ color: "hsl(150 10% 75%)" }}>15 days</strong> after switching.

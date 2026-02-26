@@ -12,6 +12,7 @@ router.post('/logout', authController.logout);
 // Protected routes (mounted at /api/users)
 router.get('/profile', authenticate, authController.getProfile);
 router.put('/profile', authenticate, authController.updateProfile);
+router.delete('/profile', authenticate, authController.deleteAccount);
 
 // Grace card routes
 router.post('/me/use-grace-card', authenticate, authController.useGraceCard);

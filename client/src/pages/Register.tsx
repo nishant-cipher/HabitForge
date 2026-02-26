@@ -37,7 +37,7 @@ export function Register() {
                         style={{ background: "var(--green)", color: "hsl(150 30% 4%)" }}>
                         <Zap className="h-5 w-5" fill="currentColor" />
                     </div>
-                    <span className="text-xl font-extrabold" style={{ color: "hsl(150 10% 95%)" }}>HabitEngine</span>
+                    <span className="text-xl font-extrabold" style={{ color: "hsl(150 10% 95%)" }}>HabitForge</span>
                 </div>
 
                 <div className="surface-card p-6">

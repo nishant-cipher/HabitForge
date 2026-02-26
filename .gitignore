@@ -18,5 +18,7 @@ coverage/
 *.seed
 *.pid.lock
 *.md
+!README.md
+!*/README.md
 *.sh
 docker-compose.local.yml

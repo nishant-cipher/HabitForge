@@ -191,3 +191,11 @@ export async function updateUserXP(
         { new: true }
     );
 }
+
+/**
+ * Delete a user
+ */
+export async function deleteUser(userId: string): Promise<void> {
+    await User.findByIdAndDelete(userId);
+    await Session.deleteMany({ userId });
+}
