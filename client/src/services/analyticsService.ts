@@ -25,6 +25,15 @@ const analyticsService = {
             return {}
         }
     },
+
+    getDashboard: async (): Promise<any> => {
+        try {
+            const response = await api.get("/analytics/dashboard")
+            return response.data.data || {}
+        } catch {
+            return {}
+        }
+    },
 }
 
 export { analyticsService }

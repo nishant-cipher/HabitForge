@@ -11,11 +11,6 @@ const navItems = [
     { to: "/mode", label: "Mode", icon: Sliders },
 ]
 
-const modeColors: Record<string, string> = {
-    DISCIPLINE: "text-red-400 bg-red-400/10 border-red-400/20",
-    BALANCED: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
-    COMPETITIVE: "text-blue-400 bg-blue-400/10 border-blue-400/20",
-}
 
 export function MainLayout() {
     const { user, logout } = useAuth()
@@ -26,8 +21,6 @@ export function MainLayout() {
         navigate("/login")
     }
 
-    const mode = (user as any)?.mode || "BALANCED"
-    const modeLabel = mode === "DISCIPLINE" ? "MONK MODE" : mode === "COMPETITIVE" ? "COMPETITIVE" : "BALANCED"
 
     return (
         <div className="flex min-h-screen w-full" style={{ background: "hsl(150 30% 4%)" }}>
@@ -42,10 +35,7 @@ export function MainLayout() {
                         <Zap className="h-4 w-4" fill="currentColor" />
                     </div>
                     <div>
-                        <div className="text-sm font-800 font-extrabold tracking-tight" style={{ color: "hsl(150 10% 95%)" }}>HabitEngine</div>
-                        <div className={`text-[10px] font-bold border rounded px-1.5 py-0.5 mt-0.5 inline-block ${modeColors[mode] || modeColors.BALANCED}`}>
-                            {modeLabel}
-                        </div>
+                        <div className="text-sm font-800 font-extrabold tracking-tight" style={{ color: "hsl(150 10% 95%)" }}>HabitForge</div>
                     </div>
                 </div>
 

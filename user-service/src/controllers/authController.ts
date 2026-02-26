@@ -207,3 +207,16 @@ export async function useGraceCard(req: Request, res: Response, next: NextFuncti
         res.status(400).json({ success: false, message: error.message || 'Failed to use grace card' });
     }
 }
+
+/** Delete account */
+export async function deleteAccount(req: Request, res: Response, next: NextFunction) {
+    try {
+        const userId = (req as any).user?.userId;
+        if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+        await authService.deleteUser(userId);
+        res.status(200).json({ success: true, message: 'Account deleted successfully' });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message || 'Failed to delete account' });
+    }
+}
