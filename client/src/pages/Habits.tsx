@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { habitService, type Habit } from "@/services/habitService"
 import { clubService, type Club, type ClubHabit } from "@/services/clubService"
@@ -48,14 +48,18 @@ interface ClubSectionProps {
     loggedIds: Set<string>
     onLogClubHabit: (clubId: string, habitId: string, habitName: string) => void
     navigate: ReturnType<typeof useNavigate>
+    onHabitCount?: (count: number) => void
 }
 
-function ClubHabitsCard({ club, completingId, loggedIds, onLogClubHabit, navigate }: ClubSectionProps) {
+function ClubHabitsCard({ club, completingId, loggedIds, onLogClubHabit, navigate, onHabitCount }: ClubSectionProps) {
     const { data: habits = [], isLoading } = useQuery<ClubHabit[]>({
         queryKey: ["club-habits", club._id],
         queryFn: () => clubService.getClubHabits(club._id),
         staleTime: 60_000,
     })
+
+    // Report count to parent so it can show/hide the header
+    useEffect(() => { onHabitCount?.(habits.length) }, [habits.length])
 
     if (isLoading || habits.length === 0) return null
 
@@ -108,6 +112,44 @@ function ClubHabitsCard({ club, completingId, loggedIds, onLogClubHabit, navigat
                     )
                 })}
             </div>
+        </div>
+    )
+}
+
+interface WrapperProps {
+    clubs: Club[]
+    completingClubHabitId: string | null
+    loggedClubHabitIds: Set<string>
+    onLogClubHabit: (clubId: string, habitId: string, habitName: string) => void
+    navigate: ReturnType<typeof useNavigate>
+}
+
+/** Shows '🏆 Club Challenges' heading only when at least one club has habits */
+function ClubChallengesWrapper({ clubs, completingClubHabitId, loggedClubHabitIds, onLogClubHabit, navigate }: WrapperProps) {
+    const [habitCounts, setHabitCounts] = useState<Record<string, number>>({})
+    const totalHabits = Object.values(habitCounts).reduce((s, n) => s + n, 0)
+
+    const handleCount = (clubId: string, count: number) =>
+        setHabitCounts(prev => prev[clubId] === count ? prev : { ...prev, [clubId]: count })
+
+    return (
+        <div className="flex flex-col gap-3">
+            {totalHabits > 0 && (
+                <h3 className="text-xs font-bold uppercase tracking-wider px-1" style={{ color: "hsl(150 10% 40%)" }}>
+                    🏆 Club Challenges
+                </h3>
+            )}
+            {clubs.map(club => (
+                <ClubHabitsCard
+                    key={club._id}
+                    club={club}
+                    completingId={completingClubHabitId}
+                    loggedIds={loggedClubHabitIds}
+                    onLogClubHabit={onLogClubHabit}
+                    navigate={navigate}
+                    onHabitCount={count => handleCount(club._id, count)}
+                />
+            ))}
         </div>
     )
 }
@@ -480,24 +522,16 @@ export function Habits() {
 
                     {/* ── Club Challenges ── */}
                     {myClubs.length > 0 && (
-                        <div className="flex flex-col gap-3">
-                            <h3 className="text-xs font-bold uppercase tracking-wider px-1" style={{ color: "hsl(150 10% 40%)" }}>
-                                🏆 Club Challenges
-                            </h3>
-                            {myClubs.map(club => (
-                                <ClubHabitsCard
-                                    key={club._id}
-                                    club={club}
-                                    completingId={completingClubHabitId}
-                                    loggedIds={loggedClubHabitIds}
-                                    onLogClubHabit={(clubId, habitId, habitName) => {
-                                        setCompletingClubHabitId(habitId)
-                                        logClubHabitMutation.mutate({ clubId, habitId, habitName })
-                                    }}
-                                    navigate={navigate}
-                                />
-                            ))}
-                        </div>
+                        <ClubChallengesWrapper
+                            clubs={myClubs}
+                            completingClubHabitId={completingClubHabitId}
+                            loggedClubHabitIds={loggedClubHabitIds}
+                            onLogClubHabit={(clubId, habitId, habitName) => {
+                                setCompletingClubHabitId(habitId)
+                                logClubHabitMutation.mutate({ clubId, habitId, habitName })
+                            }}
+                            navigate={navigate}
+                        />
                     )}
                 </div>
 

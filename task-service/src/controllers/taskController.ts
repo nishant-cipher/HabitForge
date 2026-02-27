@@ -88,6 +88,32 @@ export async function deleteTask(req: AuthRequest, res: Response) {
     }
 }
 
+// ── DELETE /api/tasks/completed ──────────────────────────────────
+export async function clearCompletedTasks(req: AuthRequest, res: Response) {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+        // Only remove tasks completed BEFORE today so today's XP/count stats stay intact
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+
+        const result = await Task.deleteMany({
+            userId,
+            isCompleted: true,
+            completedAt: { $lt: todayStart },
+        });
+        return res.json({
+            success: true,
+            message: `Cleared ${result.deletedCount} completed task(s)`,
+            deletedCount: result.deletedCount,
+        });
+    } catch (err: any) {
+        return res.status(500).json({ success: false, message: err.message });
+    }
+}
+
+
 // ── GET /api/tasks/stats ─────────────────────────────────────────
 export async function getTaskStats(req: AuthRequest, res: Response) {
     try {

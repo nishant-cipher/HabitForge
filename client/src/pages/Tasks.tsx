@@ -1,6 +1,9 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { taskService, type Task, type TaskDifficulty, TASK_XP } from "@/services/taskService"
+import { useToast } from "@/contexts/ToastContext"
+import { useNotifications } from "@/hooks/useNotifications"
+import { useConfetti } from "@/hooks/useConfetti"
 import { Plus, CheckCircle2, Trash2, ListTodo, Zap, Clock, Target } from "lucide-react"
 
 const DIFFICULTIES: { key: TaskDifficulty; label: string; color: string; bg: string }[] = [
@@ -22,16 +25,13 @@ function DiffBadge({ diff }: { diff: TaskDifficulty }) {
 
 export function Tasks() {
     const qc = useQueryClient()
+    const toast = useToast()
+    const { notify } = useNotifications()
+    const { confetti } = useConfetti()
     const [showForm, setShowForm] = useState(false)
     const [title, setTitle] = useState("")
     const [desc, setDesc] = useState("")
     const [diff, setDiff] = useState<TaskDifficulty>("MEDIUM")
-    const [toast, setToast] = useState<{ msg: string; xp?: number } | null>(null)
-
-    const showToast = (msg: string, xp?: number) => {
-        setToast({ msg, xp })
-        setTimeout(() => setToast(null), 3000)
-    }
 
     const { data: tasks = [], isLoading } = useQuery({
         queryKey: ["tasks"],
@@ -49,9 +49,9 @@ export function Tasks() {
             qc.invalidateQueries({ queryKey: ["tasks"] })
             qc.invalidateQueries({ queryKey: ["tasks-stats"] })
             setTitle(""); setDesc(""); setDiff("MEDIUM"); setShowForm(false)
-            showToast("Task forged! 🔥")
+            toast.success("Task forged! 🔥")
         },
-        onError: (e: any) => showToast(e?.response?.data?.message || "Failed to create task"),
+        onError: (e: any) => toast.error("Failed to create task", e?.response?.data?.message || e?.message),
     })
 
     const completeMutation = useMutation({
@@ -60,9 +60,21 @@ export function Tasks() {
             qc.invalidateQueries({ queryKey: ["tasks"] })
             qc.invalidateQueries({ queryKey: ["tasks-stats"] })
             qc.invalidateQueries({ queryKey: ["profile"] })
-            showToast("Task completed!", data.xpEarned)
+            toast.xp(data.xpEarned, "Task completed!")
+            notify("Task completed! ⚡", `+${data.xpEarned} XP earned`)
+            confetti()
         },
-        onError: (e: any) => showToast(e?.response?.data?.message || "Failed to complete task"),
+        onError: (e: any) => toast.error("Failed to complete task", e?.response?.data?.message || e?.message),
+    })
+
+    const clearCompletedMutation = useMutation({
+        mutationFn: taskService.clearCompleted,
+        onSuccess: (res) => {
+            qc.invalidateQueries({ queryKey: ["tasks"] })
+            qc.invalidateQueries({ queryKey: ["tasks-stats"] })
+            toast.success(`Cleared ${res.deletedCount} completed task${res.deletedCount !== 1 ? "s" : ""}`)
+        },
+        onError: (e: any) => toast.error("Failed to clear tasks", e?.response?.data?.message || e?.message),
     })
 
     const deleteMutation = useMutation({
@@ -78,16 +90,6 @@ export function Tasks() {
 
     return (
         <div className="flex flex-col gap-6" style={{ fontFamily: "'Manrope', sans-serif" }}>
-            {/* Toast */}
-            {toast && (
-                <div className="fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl"
-                    style={{ background: "hsl(150 20% 10%)", border: "1px solid rgba(19,236,106,0.3)", color: "#13ec6a", boxShadow: "0 0 20px rgba(19,236,106,0.15)" }}>
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span className="font-semibold text-sm">{toast.msg}</span>
-                    {toast.xp && <span className="text-xs opacity-80">+{toast.xp} XP</span>}
-                </div>
-            )}
-
             {/* Header */}
             <div className="flex items-start justify-between">
                 <div>
@@ -257,6 +259,16 @@ export function Tasks() {
                             Completed
                         </h2>
                         <span className="ml-auto badge-green">{completed.length}</span>
+                        {completed.length > 0 && (
+                            <button
+                                onClick={() => clearCompletedMutation.mutate()}
+                                disabled={clearCompletedMutation.isPending}
+                                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
+                                style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)" }}>
+                                <Trash2 className="h-3 w-3" />
+                                {clearCompletedMutation.isPending ? "Clearing..." : "Clear All"}
+                            </button>
+                        )}
                     </div>
 
                     {completed.length === 0 ? (

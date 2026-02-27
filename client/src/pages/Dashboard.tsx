@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/contexts/ToastContext"
 import { useTodayLoggedClubHabits } from "@/hooks/useTodayLoggedClubHabits"
+import { scheduleEndOfDayReminder } from "@/hooks/useNotifications"
+import { useConfetti } from "@/hooks/useConfetti"
 import { habitService } from "@/services/habitService"
 import { clubService, type Club, type ClubHabit } from "@/services/clubService"
 import { taskService, type Task, TASK_XP } from "@/services/taskService"
@@ -144,6 +146,7 @@ export function Dashboard() {
     const qc = useQueryClient()
     const navigate = useNavigate()
     const toast = useToast()
+    const { confetti } = useConfetti()
     const [completingHabitId, setCompletingHabitId] = useState<string | null>(null)
     const [completingTaskId, setCompletingTaskId] = useState<string | null>(null)
     const [completingClubHabitId, setCompletingClubHabitId] = useState<string | null>(null)
@@ -189,6 +192,7 @@ export function Dashboard() {
             const habitName = habits.find((h: any) => h._id === id)?.name
             const xp = data?.xpEarned ?? data?.log?.xpEarned ?? 0
             toast.xp(xp, habitName ? `${habitName} logged! 🔥` : "Habit logged! Keep the streak going 🔥")
+            confetti()
         },
         onError: (e: any) => {
             setCompletingHabitId(null)
@@ -208,6 +212,7 @@ export function Dashboard() {
             markClubHabitLogged(habitId)
             const xp = data?.xpEarned ?? 0
             toast.xp(xp, `${habitName} logged! 🏆`)
+            confetti()
         },
         onError: (e: any, { habitId }) => {
             setCompletingClubHabitId(null)
@@ -229,6 +234,7 @@ export function Dashboard() {
             qc.invalidateQueries({ queryKey: ["profile"] })
             setCompletingTaskId(null)
             toast.xp(data.xpEarned, "Task completed! 🎯")
+            confetti()
         },
         onError: (e: any) => {
             setCompletingTaskId(null)
@@ -262,6 +268,15 @@ export function Dashboard() {
     )
     const todayHabits = (habits as any[]).filter((h: any) => h.isActive !== false)
     const pendingTasks = (tasks as Task[]).filter(t => !t.isCompleted)
+    const pendingHabitCount = todayHabits.filter((h: any) => !todayCompletedIds.has(h._id)).length
+    const pendingTaskCount = pendingTasks.length
+
+    // ── Schedule end-of-day OS notification via Service Worker ────────────────
+    // Fires once per calendar day at 9 PM if there are items left to do.
+    useEffect(() => {
+        if (pendingHabitCount === 0 && pendingTaskCount === 0) return
+        scheduleEndOfDayReminder(pendingHabitCount, pendingTaskCount, 0)
+    }, [pendingHabitCount, pendingTaskCount])
 
     const graceSilver = profile?.graceSilverCards || 0
     const graceGold = profile?.graceGoldCards || 0

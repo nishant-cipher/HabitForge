@@ -11,6 +11,7 @@ router.get('/stats', taskController.getTaskStats);
 // Task CRUD + complete
 router.get('/', taskController.getTasks);
 router.post('/', taskController.createTask);
+router.delete('/completed', taskController.clearCompletedTasks);  // must be before /:taskId
 router.post('/:taskId/complete', taskController.completeTask);
 router.delete('/:taskId', taskController.deleteTask);
 

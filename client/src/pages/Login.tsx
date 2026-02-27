@@ -85,24 +85,29 @@ function ErrorDialog({ message, onClose }: { message: string; onClose: () => voi
 }
 
 export function Login() {
-    const [email, setEmail] = useState("")
+    const [identifier, setIdentifier] = useState("")
     const [password, setPassword] = useState("")
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(false)
     const { login } = useAuth()
     const navigate = useNavigate()
 
+    const isEmail = identifier.includes("@")
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError("")
         setLoading(true)
         try {
-            const response = await api.post("/auth/login", { email, password })
+            const payload = isEmail
+                ? { email: identifier.trim(), password }
+                : { username: identifier.trim(), password }
+            const response = await api.post("/auth/login", payload)
             const { accessToken, user } = response.data.data
             login(accessToken, user)
             navigate("/dashboard")
         } catch (err: any) {
-            setError(err.response?.data?.message || "Incorrect email or password")
+            setError(err.response?.data?.message || "Incorrect credentials")
         } finally {
             setLoading(false)
         }
@@ -129,11 +134,14 @@ export function Login() {
 
                     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                         <div>
-                            <label className="text-xs font-semibold mb-1 block" style={{ color: "hsl(150 10% 55%)" }}>Email</label>
+                            <label className="text-xs font-semibold mb-1 block" style={{ color: "hsl(150 10% 55%)" }}>
+                                {isEmail ? "Email" : identifier ? "Username" : "Email or Username"}
+                            </label>
                             <input
-                                id="email" type="email" required
-                                value={email} onChange={e => setEmail(e.target.value)}
-                                placeholder="you@example.com"
+                                id="identifier" type="text" required
+                                value={identifier} onChange={e => setIdentifier(e.target.value)}
+                                placeholder="you@example.com or username"
+                                autoComplete="username"
                                 className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all"
                                 style={{ background: "hsl(150 15% 10%)", border: "1px solid hsl(150 15% 16%)", color: "hsl(150 10% 90%)" }}
                             />
@@ -144,6 +152,7 @@ export function Login() {
                                 id="password" type="password" required
                                 value={password} onChange={e => setPassword(e.target.value)}
                                 placeholder="••••••••"
+                                autoComplete="current-password"
                                 className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all"
                                 style={{ background: "hsl(150 15% 10%)", border: "1px solid hsl(150 15% 16%)", color: "hsl(150 10% 90%)" }}
                             />

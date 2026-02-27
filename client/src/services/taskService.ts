@@ -57,6 +57,11 @@ const taskService = {
     deleteTask: async (taskId: string): Promise<void> => {
         await api.delete(`/tasks/${taskId}`)
     },
+
+    clearCompleted: async (): Promise<{ deletedCount: number }> => {
+        const r = await api.delete('/tasks/completed')
+        return r.data
+    },
 }
 
 export { taskService }
