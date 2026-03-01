@@ -1,8 +1,10 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import Redis from 'ioredis';
 import authRoutes from './routes/authRoutes';
 
 // Load environment variables
@@ -14,9 +16,10 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/habitf
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -52,11 +55,33 @@ app.use((err: any, req: Request, res: Response, next: any) => {
     });
 });
 
+// Exported Redis client for token blacklisting (used by authController)
+export let redisClient: Redis | null = null;
+
 // Connect to MongoDB and start server
 async function startServer() {
     try {
         await mongoose.connect(MONGODB_URI);
         console.log('✅ Connected to MongoDB');
+
+        // Initialize Redis for token blacklisting
+        try {
+            const client = new Redis({
+                host: process.env.REDIS_HOST || 'localhost',
+                port: parseInt(process.env.REDIS_PORT || '6379'),
+                password: process.env.REDIS_PASSWORD,
+                lazyConnect: true,
+                retryStrategy: (times) => (times > 3 ? null : Math.min(times * 100, 1000))
+            });
+            client.on('error', (err) => {
+                console.warn('⚠️  Redis error (blacklisting degraded):', err.message);
+            });
+            await client.connect();
+            redisClient = client;
+            console.log('✅ Redis connected (token blacklisting active)');
+        } catch (redisErr) {
+            console.warn('⚠️  Redis unavailable, token blacklisting disabled');
+        }
 
         app.listen(PORT, () => {
             console.log(`🚀 User Service running on port ${PORT}`);
@@ -70,6 +95,7 @@ async function startServer() {
 // Handle shutdown gracefully
 process.on('SIGTERM', async () => {
     console.log('SIGTERM received, shutting down gracefully...');
+    if (redisClient) await redisClient.quit();
     await mongoose.disconnect();
     process.exit(0);
 });

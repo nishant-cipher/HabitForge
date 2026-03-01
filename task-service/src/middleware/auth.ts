@@ -13,13 +13,21 @@ export interface AuthRequest extends Request {
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 
+/**
+ * Middleware to verify JWT token.
+ * Reads from hf_access cookie first (browser requests),
+ * falls back to Authorization: Bearer header (service-to-service calls).
+ */
 export function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
     try {
+        const cookieToken = (req as any).cookies?.hf_access;
         const authHeader = req.headers.authorization;
-        if (!authHeader?.startsWith('Bearer ')) {
+        const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : undefined;
+        const token = cookieToken ?? bearerToken;
+
+        if (!token) {
             return res.status(401).json({ success: false, message: 'No token provided' });
         }
-        const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
         req.user = decoded;
         next();

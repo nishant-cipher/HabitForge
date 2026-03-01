@@ -286,9 +286,9 @@ export function Dashboard() {
     return (
         <div className="flex flex-col gap-6">
             {/* Header */}
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: "hsl(150 10% 95%)" }}>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight" style={{ color: "hsl(150 10% 95%)" }}>
                         Command Center
                     </h1>
                     <p className="text-sm mt-1" style={{ color: "hsl(150 10% 50%)" }}>
@@ -300,21 +300,17 @@ export function Dashboard() {
                         )}
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-shrink-0">
                     <button onClick={() => navigate("/mode")}
                         className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl"
                         style={{ background: modeInfo.bg, color: modeInfo.color, border: `1px solid ${modeInfo.color}30` }}>
                         <Sliders className="h-3 w-3" /> {modeInfo.label} Mode
                     </button>
-                    <div className="text-right">
-                        <div className="text-sm font-semibold" style={{ color: "hsl(150 10% 80%)" }}>{user?.username}</div>
-                        <div className="text-xs" style={{ color: "hsl(150 10% 50%)" }}>Level {level}</div>
-                    </div>
                 </div>
             </div>
 
             {/* Stats Row */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {[
                     { label: "Best Streak", value: `${topStreak}d`, icon: Flame, color: "#f97316" },
                     { label: "Total XP", value: totalXP.toLocaleString(), icon: Zap, color: "var(--green)" },
@@ -398,14 +394,16 @@ export function Dashboard() {
                 </div>
 
                 {/* XP Chart */}
-                <div className="lg:col-span-2 surface-card p-5">
+                <div className="lg:col-span-2 surface-card p-5 flex flex-col">
                     <div className="flex items-center gap-2 mb-4">
                         <Zap className="h-4 w-4" style={{ color: "var(--green)" }} />
                         <h2 className="text-sm font-bold uppercase tracking-wider" style={{ color: "hsl(150 10% 70%)" }}>
                             XP Momentum
                         </h2>
                     </div>
-                    <XPChart logs={logs} />
+                    <div className="flex-1">
+                        <XPChart logs={logs} />
+                    </div>
                 </div>
             </div>
 
@@ -542,7 +540,7 @@ export function Dashboard() {
                         Consistency Map
                     </h2>
                 </div>
-                <ConsistencyHeatmap logs={logs} />
+                <ConsistencyHeatmap logs={logs} habits={habits as any[]} />
             </div>
         </div>
     )

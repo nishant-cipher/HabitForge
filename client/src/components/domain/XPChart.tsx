@@ -1,5 +1,5 @@
 import {
-    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart
 } from "recharts"
 import { useMemo } from "react"
 
@@ -31,14 +31,14 @@ export function XPChart({ logs, days = 7 }: XPChartProps) {
 
     if (!hasData) {
         return (
-            <div className="flex items-center justify-center h-40 text-sm" style={{ color: "hsl(150 10% 35%)" }}>
+            <div className="flex items-center justify-center h-full min-h-[160px] text-sm" style={{ color: "hsl(150 10% 35%)" }}>
                 Complete habits to see your XP momentum
             </div>
         )
     }
 
     return (
-        <ResponsiveContainer width="100%" height={180}>
+        <ResponsiveContainer width="100%" height="100%" minHeight={160}>
             <AreaChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                 <defs>
                     <linearGradient id="xpGradient" x1="0" y1="0" x2="0" y2="1">

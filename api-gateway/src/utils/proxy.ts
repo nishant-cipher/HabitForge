@@ -69,7 +69,14 @@ export function createServiceProxy(serviceUrl: string) {
 
             console.log(`Response status: ${response.status}`);
 
-            // Forward response
+            // Forward response headers (critical for Set-Cookie pass-through)
+            const headersToForward = ['set-cookie', 'content-type'];
+            for (const header of headersToForward) {
+                const value = response.headers[header];
+                if (value) {
+                    res.setHeader(header, value);
+                }
+            }
             res.status(response.status).json(response.data);
         } catch (error: any) {
             console.error(`Proxy error:`, error.message);

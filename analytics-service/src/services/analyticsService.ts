@@ -1,12 +1,44 @@
 import axios from 'axios';
+import { redisClient } from '../index';
 
 const USER_SERVICE_URL = process.env.USER_SERVICE_URL || 'http://localhost:3001';
 const HABIT_SERVICE_URL = process.env.HABIT_SERVICE_URL || 'http://localhost:3002';
+
+const CACHE_TTL = 300; // 5 minutes
+
+/** Attempt to get a cached value from Redis */
+async function cacheGet<T>(key: string): Promise<T | null> {
+    if (!redisClient || redisClient.status !== 'ready') return null;
+    try {
+        const raw = await redisClient.get(key);
+        return raw ? (JSON.parse(raw) as T) : null;
+    } catch {
+        return null;
+    }
+}
+
+/** Attempt to store a value in Redis with TTL */
+async function cacheSet(key: string, value: unknown): Promise<void> {
+    if (!redisClient || redisClient.status !== 'ready') return;
+    try {
+        await redisClient.setex(key, CACHE_TTL, JSON.stringify(value));
+    } catch {
+        // Silently fail — caching is best-effort
+    }
+}
 
 /**
  * Get user dashboard data
  */
 export async function getUserDashboard(userId: string, token: string) {
+    const cacheKey = `analytics:dashboard:${userId}`;
+
+    // Try cache first
+    const cached = await cacheGet<object>(cacheKey);
+    if (cached) {
+        return cached;
+    }
+
     try {
         // Fetch user profile from user-service
         const userResponse = await axios.get(`${USER_SERVICE_URL}/api/users/profile`, {
@@ -33,20 +65,20 @@ export async function getUserDashboard(userId: string, token: string) {
 
         const habitStatsResponses = await Promise.all(habitStatsPromises);
         const habitStats = habitStatsResponses
-            .filter(r => r !== null)
-            .map(r => r!.data.data);
+            .filter((r: any) => r !== null)
+            .map((r: any) => r!.data.data);
 
         // Calculate aggregates
-        const totalCompletions = habitStats.reduce((sum, stat) => sum + (stat.totalCompletions || 0), 0);
-        const currentStreak = Math.max(...habitStats.map(s => s.currentStreak || 0), 0);
-        const longestStreak = Math.max(...habitStats.map(s => s.longestStreak || 0), 0);
+        const totalCompletions = habitStats.reduce((sum: number, stat: any) => sum + (stat.totalCompletions || 0), 0);
+        const currentStreak = Math.max(...habitStats.map((s: any) => s.currentStreak || 0), 0);
+        const longestStreak = Math.max(...habitStats.map((s: any) => s.longestStreak || 0), 0);
 
         // Calculate completion rate (last 7 days)
         const completionRate = totalHabits > 0
             ? (totalCompletions / (totalHabits * 7)) * 100
             : 0;
 
-        return {
+        const result = {
             user: {
                 id: user.id,
                 username: user.username,
@@ -68,6 +100,11 @@ export async function getUserDashboard(userId: string, token: string) {
                 stats: habitStats[index] || {}
             }))
         };
+
+        // Store in cache
+        await cacheSet(cacheKey, result);
+
+        return result;
     } catch (error: any) {
         throw new Error(`Failed to fetch dashboard data: ${error.message}`);
     }
@@ -77,6 +114,14 @@ export async function getUserDashboard(userId: string, token: string) {
  * Get habit trends
  */
 export async function getHabitTrends(userId: string, token: string, period: 'DAILY' | 'WEEKLY' | 'MONTHLY' = 'WEEKLY') {
+    const cacheKey = `analytics:trends:${userId}:${period}`;
+
+    // Try cache first
+    const cached = await cacheGet<object[]>(cacheKey);
+    if (cached) {
+        return cached;
+    }
+
     try {
         // Fetch habits
         const habitsResponse = await axios.get(`${HABIT_SERVICE_URL}/api/habits`, {
@@ -96,8 +141,6 @@ export async function getHabitTrends(userId: string, token: string, period: 'DAI
         // Process trends
         const trends = habits.map((habit: any, index: number) => {
             const logs = logsResponses[index].data.data;
-
-            // Group by period
             const groupedLogs = groupLogsByPeriod(logs, period);
 
             return {
@@ -108,6 +151,9 @@ export async function getHabitTrends(userId: string, token: string, period: 'DAI
                 data: groupedLogs
             };
         });
+
+        // Store in cache
+        await cacheSet(cacheKey, trends);
 
         return trends;
     } catch (error: any) {

@@ -12,20 +12,23 @@ export interface AuthRequest extends Request {
 }
 
 /**
- * Middleware to verify JWT token
+ * Middleware to verify JWT token.
+ * Reads from hf_access cookie first (browser requests),
+ * falls back to Authorization: Bearer header (service-to-service calls).
  */
 export function authenticate(req: Request, res: Response, next: NextFunction) {
     try {
+        const cookieToken = (req as any).cookies?.hf_access;
         const authHeader = req.headers.authorization;
+        const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : undefined;
+        const token = cookieToken ?? bearerToken;
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (!token) {
             return res.status(401).json({
                 success: false,
                 message: 'No token provided'
             });
         }
-
-        const token = authHeader.substring(7);
 
         const decoded = jwt.verify(token, JWT_SECRET) as {
             userId: string;

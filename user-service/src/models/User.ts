@@ -16,6 +16,13 @@ export interface IUser extends Document {
     level: number;
     graceSilverCards: number;
     graceGoldCards: number;
+    notificationPrefs: {
+        dailyReminders: boolean;
+        streakAlerts: boolean;
+        clubActivity: boolean;
+    };
+    resetPasswordToken?: string;
+    resetPasswordExpires?: Date;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -68,7 +75,14 @@ const UserSchema = new Schema<IUser>({
         type: Number,
         default: 0,
         min: 0
-    }
+    },
+    notificationPrefs: {
+        dailyReminders: { type: Boolean, default: true },
+        streakAlerts: { type: Boolean, default: true },
+        clubActivity: { type: Boolean, default: true },
+    },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
 }, {
     timestamps: true
 });

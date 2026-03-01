@@ -5,34 +5,18 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    withCredentials: true, // Send HttpOnly cookies automatically
 });
 
-// Request interceptor to add auth token
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
-
 // Response interceptor to handle 401s
+// No request interceptor needed — the hf_access cookie is sent automatically
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // Only force logout if the user has no token stored at all.
-            // If a token exists but the API returns 401, it may be a backend
-            // misconfiguration — don't log out the user mid-session.
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/login';
-            }
+            // Cookie-based auth: if server returns 401, the cookie is missing/expired.
+            // Redirect to login unconditionally.
+            window.location.href = '/login';
         }
         return Promise.reject(error);
     }

@@ -103,8 +103,8 @@ export function Login() {
                 ? { email: identifier.trim(), password }
                 : { username: identifier.trim(), password }
             const response = await api.post("/auth/login", payload)
-            const { accessToken, user } = response.data.data
-            login(accessToken, user)
+            const { user } = response.data.data
+            login(user)
             navigate("/dashboard")
         } catch (err: any) {
             setError(err.response?.data?.message || "Incorrect credentials")
@@ -125,7 +125,7 @@ export function Login() {
                         style={{ background: "var(--green)", color: "hsl(150 30% 4%)" }}>
                         <Zap className="h-5 w-5" fill="currentColor" />
                     </div>
-                    <span style={{ fontFamily: "'Press Start 2P', cursive", fontSize: "11px", color: "hsl(150 10% 95%)", letterSpacing: "0.02em" }}>HabitForge</span>
+                    <span style={{ fontFamily: "'Press Start 2P', cursive", fontSize: "14px", color: "hsl(150 10% 95%)", letterSpacing: "0.02em" }}>HabitForge</span>
                 </div>
 
                 <div className="surface-card p-6">
@@ -147,7 +147,10 @@ export function Login() {
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-semibold mb-1 block" style={{ color: "hsl(150 10% 55%)" }}>Password</label>
+                            <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-semibold" style={{ color: "hsl(150 10% 55%)" }}>Password</label>
+
+                            </div>
                             <input
                                 id="password" type="password" required
                                 value={password} onChange={e => setPassword(e.target.value)}
@@ -163,7 +166,10 @@ export function Login() {
                             {loading ? "Signing in..." : "Sign In"}
                         </button>
                     </form>
-
+                    <Link to="/forgot-password" className="text-xs font-medium transition-opacity hover:opacity-70 mt-1"
+                        style={{ color: "var(--green)" }}>
+                        Forgot password?
+                    </Link>
                     <p className="text-center text-sm mt-4" style={{ color: "hsl(150 10% 45%)" }}>
                         No account?{" "}
                         <Link to="/register" className="font-semibold" style={{ color: "var(--green)" }}>

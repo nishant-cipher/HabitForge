@@ -217,9 +217,9 @@ export function Clubs() {
     return (
         <div className="flex flex-col gap-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: "hsl(150 10% 95%)" }}>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight" style={{ color: "hsl(150 10% 95%)" }}>
                         Explore Clubs
                     </h1>
                     <p className="text-sm mt-1" style={{ color: "hsl(150 10% 50%)" }}>
@@ -229,14 +229,14 @@ export function Clubs() {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => { setShowJoinByCode(true); setGlobalCode(""); setGlobalCodeError("") }}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
+                        className="flex items-center justify-center gap-2 flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-semibold"
                         style={{ background: "hsl(150 15% 11%)", border: "1px solid hsl(150 15% 18%)", color: "hsl(150 10% 75%)" }}
                     >
                         <Lock className="h-4 w-4" /> Join by Code
                     </button>
                     <button
                         onClick={() => setShowCreate(true)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
+                        className="flex items-center justify-center gap-2 flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-semibold"
                         style={{ background: "var(--green)", color: "hsl(150 30% 4%)" }}
                     >
                         <Plus className="h-4 w-4" /> Create Club

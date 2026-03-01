@@ -8,11 +8,16 @@ const router = Router();
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.post('/logout', authController.logout);
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/reset-password', authController.resetPassword);
 
 // Protected routes (mounted at /api/users)
 router.get('/profile', authenticate, authController.getProfile);
 router.put('/profile', authenticate, authController.updateProfile);
 router.delete('/profile', authenticate, authController.deleteAccount);
+router.patch('/password', authenticate, authController.changePassword);
+router.patch('/email', authenticate, authController.changeEmail);
+router.patch('/notifications', authenticate, authController.updateNotifications);
 
 // Grace card routes
 router.post('/me/use-grace-card', authenticate, authController.useGraceCard);
@@ -22,4 +27,3 @@ router.put('/:userId/xp', authController.updateUserXP);
 router.post('/:userId/award-grace-card', authController.awardGraceCard);
 
 export default router;
-

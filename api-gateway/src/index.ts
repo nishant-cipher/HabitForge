@@ -1,9 +1,10 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { authenticate } from './middleware/auth';
-import { rateLimiter } from './middleware/rateLimiter';
+// rateLimiter disabled — Redis used only for blacklisting & caching
 import {
     userServiceProxy,
     habitServiceProxy,
@@ -20,9 +21,10 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Health check
 app.get('/health', (req: Request, res: Response) => {
@@ -41,15 +43,15 @@ app.use((req: Request, res: Response, next: any) => {
 });
 
 // Public routes (no authentication required)
-app.use('/api/auth', rateLimiter, userServiceProxy);
+app.use('/api/auth', userServiceProxy);
 
 // Protected routes (authentication required)
-app.use('/api/users', authenticate, rateLimiter, userServiceProxy);
-app.use('/api/habits', authenticate, rateLimiter, habitServiceProxy);
-app.use('/api/gamification', authenticate, rateLimiter, habitServiceProxy);
-app.use('/api/clubs', authenticate, rateLimiter, clubServiceProxy);
-app.use('/api/analytics', authenticate, rateLimiter, analyticsServiceProxy);
-app.use('/api/tasks', authenticate, rateLimiter, taskServiceProxy);
+app.use('/api/users', authenticate, userServiceProxy);
+app.use('/api/habits', authenticate, habitServiceProxy);
+app.use('/api/gamification', authenticate, habitServiceProxy);
+app.use('/api/clubs', authenticate, clubServiceProxy);
+app.use('/api/analytics', authenticate, analyticsServiceProxy);
+app.use('/api/tasks', authenticate, taskServiceProxy);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

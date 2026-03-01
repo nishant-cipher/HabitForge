@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import habitRoutes from './routes/habitRoutes';
@@ -15,9 +16,10 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/habitf
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Routes
 app.use('/api/habits', habitRoutes);
