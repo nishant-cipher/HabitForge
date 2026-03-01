@@ -13,7 +13,6 @@ import api from "@/services/api"
 import { Flame, Zap, CheckCircle2, Trophy, Calendar, Target, ShieldCheck, Sliders, ListTodo, ChevronRight, ExternalLink } from "lucide-react"
 import { XPChart } from "@/components/domain/XPChart"
 import { ConsistencyHeatmap } from "@/components/domain/ConsistencyHeatmap"
-import { UserAvatar } from "@/components/layouts/MainLayout"
 
 const categoryColors: Record<string, string> = {
     HEALTH: "#13ec6a", LEARNING: "#3b82f6", PRODUCTIVITY: "#f59e0b",
