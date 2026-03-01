@@ -252,7 +252,7 @@ export function Settings() {
             <div className="surface-card p-5" style={{ borderColor: "rgba(239,68,68,0.2)" }}>
                 <h2 className="text-sm font-bold uppercase tracking-wider mb-4" style={{ color: "hsl(0 60% 55%)" }}>Danger Zone</h2>
                 <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between pb-4" style={{ borderBottom: "1px solid hsl(150 15% 11%)" }}>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4" style={{ borderBottom: "1px solid hsl(150 15% 11%)" }}>
                         <div>
                             <div className="text-sm font-semibold" style={{ color: "hsl(150 10% 85%)" }}>Sign Out</div>
                             <div className="text-xs" style={{ color: "hsl(150 10% 45%)" }}>Log out of this device</div>
@@ -263,7 +263,7 @@ export function Settings() {
                             <LogOut className="h-4 w-4" /> Sign Out
                         </button>
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
                             <div className="text-sm font-semibold" style={{ color: "hsl(0 60% 60%)" }}>Delete Account</div>
                             <div className="text-xs" style={{ color: "hsl(0 60% 50%)", opacity: 0.8 }}>Permanently delete your data</div>

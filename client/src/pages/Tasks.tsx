@@ -273,18 +273,25 @@ export function Tasks() {
         <div className="flex flex-col gap-6" style={{ fontFamily: "'Manrope', sans-serif" }}>
 
             {/* Header */}
-            <div className="flex items-start justify-between flex-wrap gap-3">
-                <div>
-                    <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: "hsl(150 10% 95%)" }}>
-                        Task Forge
-                    </h1>
-                    <p className="text-sm mt-1" style={{ color: "hsl(150 10% 50%)" }}>
-                        One-off tasks with difficulty-based XP rewards
-                    </p>
+            <div className="flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight" style={{ color: "hsl(150 10% 95%)" }}>
+                            Task Forge
+                        </h1>
+                        <p className="text-sm mt-1" style={{ color: "hsl(150 10% 50%)" }}>
+                            One-off tasks with difficulty-based XP rewards
+                        </p>
+                    </div>
+                    <button onClick={() => setShowForm(v => !v)}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all hover:scale-105 flex-shrink-0"
+                        style={{ background: "#13ec6a", color: "hsl(150 30% 4%)", boxShadow: "0 0 16px rgba(19,236,106,0.35)" }}>
+                        <Plus className="h-4 w-4" /> Forge Task
+                    </button>
                 </div>
-                <div className="flex items-center gap-3">
-                    {/* Sort control — custom styled buttons */}
-                    <div className="flex items-center gap-1 p-1 rounded-xl"
+                {/* Sort control — scrollable on mobile */}
+                <div className="overflow-x-auto pb-0.5">
+                    <div className="flex items-center gap-1 p-1 rounded-xl w-max"
                         style={{ background: "hsl(150 15% 9%)", border: "1px solid hsl(150 15% 14%)" }}>
                         <ArrowUpDown className="h-3.5 w-3.5 ml-1 flex-shrink-0" style={{ color: "hsl(150 10% 40%)" }} />
                         {([
@@ -294,7 +301,7 @@ export function Tasks() {
                             { key: "priority", label: "Priority" },
                         ] as { key: SortKey; label: string }[]).map(({ key, label }) => (
                             <button key={key} onClick={() => setSortBy(key)}
-                                className="px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all"
+                                className="px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all whitespace-nowrap"
                                 style={{
                                     background: sortBy === key ? "var(--green-dim)" : "transparent",
                                     color: sortBy === key ? "var(--green)" : "hsl(150 10% 45%)",
@@ -303,11 +310,6 @@ export function Tasks() {
                             </button>
                         ))}
                     </div>
-                    <button onClick={() => setShowForm(v => !v)}
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all hover:scale-105"
-                        style={{ background: "#13ec6a", color: "hsl(150 30% 4%)", boxShadow: "0 0 16px rgba(19,236,106,0.35)" }}>
-                        <Plus className="h-4 w-4" /> Forge Task
-                    </button>
                 </div>
             </div>
 
@@ -327,156 +329,176 @@ export function Tasks() {
                 ))}
             </div>
 
-            {/* Create Form */}
+
+            {/* Create Task Modal */}
             {showForm && (
-                <div className="surface-card p-5 flex flex-col gap-4">
-                    <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: "var(--green)" }}>
-                        New Task Protocol
-                    </h3>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                    style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }}
+                    onClick={resetForm}>
+                    <div className="surface-card w-full max-w-lg flex flex-col gap-4 p-6 max-h-[90vh] overflow-y-auto"
+                        onClick={e => e.stopPropagation()}>
 
-                    {/* Title */}
-                    <div>
-                        <div className="flex items-center justify-between mb-1">
-                            <label className="text-xs font-semibold" style={{ color: "hsl(150 10% 55%)" }}>Title *</label>
-                            <CharCounter current={title.length} max={TITLE_MAX} />
-                        </div>
-                        <input value={title} onChange={e => setTitle(e.target.value)}
-                            placeholder="What needs to be done?"
-                            maxLength={TITLE_MAX + 10}
-                            className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
-                            style={{ background: "hsl(150 15% 10%)", border: "1px solid hsl(150 15% 16%)", color: "hsl(150 10% 90%)" }}
-                        />
-                    </div>
-
-                    {/* Description */}
-                    <div>
-                        <div className="flex items-center justify-between mb-1">
-                            <label className="text-xs font-semibold" style={{ color: "hsl(150 10% 55%)" }}>Description</label>
-                            <CharCounter current={desc.length} max={DESC_MAX} />
-                        </div>
-                        <textarea value={desc} onChange={e => setDesc(e.target.value)}
-                            placeholder="Optional details..."
-                            rows={2}
-                            maxLength={DESC_MAX + 10}
-                            className="w-full px-3 py-2.5 rounded-lg text-sm outline-none resize-none"
-                            style={{ background: "hsl(150 15% 10%)", border: "1px solid hsl(150 15% 16%)", color: "hsl(150 10% 90%)" }}
-                        />
-                    </div>
-
-                    {/* Difficulty + Priority */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="text-xs font-semibold mb-1 block" style={{ color: "hsl(150 10% 55%)" }}>Difficulty</label>
-                            <div className="flex gap-1.5 flex-wrap">
-                                {DIFFICULTIES.map(d => (
-                                    <button key={d.key} type="button" onClick={() => setDiff(d.key)}
-                                        className="px-2.5 py-1 rounded-lg text-xs font-bold transition-all"
-                                        style={{
-                                            background: diff === d.key ? d.bg : "hsl(150 15% 10%)",
-                                            color: diff === d.key ? d.color : "hsl(150 10% 45%)",
-                                            border: `1px solid ${diff === d.key ? d.color + "44" : "hsl(150 15% 16%)"}`,
-                                        }}>
-                                        {d.label}
-                                    </button>
-                                ))}
+                        {/* Modal header */}
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h2 className="text-lg font-bold" style={{ color: "hsl(150 10% 92%)" }}>New Task Protocol</h2>
+                                <p className="text-xs mt-0.5" style={{ color: "hsl(150 10% 45%)" }}>Forge a task and earn XP on completion</p>
                             </div>
+                            <button onClick={resetForm}
+                                className="p-1.5 rounded-lg transition-colors hover:bg-white/5"
+                                style={{ color: "hsl(150 10% 50%)" }}>
+                                <X className="h-5 w-5" />
+                            </button>
                         </div>
-                        <div>
-                            <label className="text-xs font-semibold mb-1 block" style={{ color: "hsl(150 10% 55%)" }}>
-                                Priority <span style={{ color: "hsl(150 10% 35%)" }}>(optional)</span>
-                            </label>
-                            <div className="flex gap-1.5 flex-wrap">
-                                {PRIORITIES.map(p => (
-                                    <button key={p.key} type="button" onClick={() => setPriority(prev => prev === p.key ? "" : p.key)}
-                                        className="px-2.5 py-1 rounded-lg text-xs font-bold transition-all"
-                                        style={{
-                                            background: priority === p.key ? p.bg : "hsl(150 15% 10%)",
-                                            color: priority === p.key ? p.color : "hsl(150 10% 45%)",
-                                            border: `1px solid ${priority === p.key ? p.color + "44" : "hsl(150 15% 16%)"}`,
-                                        }}>
-                                        {p.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Deadline + Reminder */}
-                    <div className="flex flex-col gap-3">
+                        {/* Title */}
+                        <div>
+                            <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-semibold" style={{ color: "hsl(150 10% 55%)" }}>Title *</label>
+                                <CharCounter current={title.length} max={TITLE_MAX} />
+                            </div>
+                            <input value={title} onChange={e => setTitle(e.target.value)}
+                                placeholder="What needs to be done?"
+                                autoFocus
+                                maxLength={TITLE_MAX + 10}
+                                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                                style={{ background: "hsl(150 15% 10%)", border: "1px solid hsl(150 15% 16%)", color: "hsl(150 10% 90%)" }}
+                            />
+                        </div>
+
+                        {/* Description */}
+                        <div>
+                            <div className="flex items-center justify-between mb-1">
+                                <label className="text-xs font-semibold" style={{ color: "hsl(150 10% 55%)" }}>Description</label>
+                                <CharCounter current={desc.length} max={DESC_MAX} />
+                            </div>
+                            <textarea value={desc} onChange={e => setDesc(e.target.value)}
+                                placeholder="Optional details..."
+                                rows={2}
+                                maxLength={DESC_MAX + 10}
+                                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none resize-none"
+                                style={{ background: "hsl(150 15% 10%)", border: "1px solid hsl(150 15% 16%)", color: "hsl(150 10% 90%)" }}
+                            />
+                        </div>
+
+                        {/* Difficulty + Priority */}
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="text-xs font-semibold mb-1 block" style={{ color: "hsl(150 10% 55%)" }}>
-                                    Deadline <span style={{ color: "hsl(150 10% 35%)" }}>(optional)</span>
-                                </label>
-                                <input
-                                    type="datetime-local"
-                                    value={deadline}
-                                    min={todayMin}
-                                    onChange={e => { setDeadline(e.target.value); if (!e.target.value) { setReminder(false); setReminderAt("") } }}
-                                    className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                                    style={{ background: "hsl(150 15% 10%)", border: "1px solid hsl(150 15% 16%)", color: "hsl(150 10% 80%)" }}
-                                />
+                                <label className="text-xs font-semibold mb-1 block" style={{ color: "hsl(150 10% 55%)" }}>Difficulty</label>
+                                <div className="flex gap-1.5 flex-wrap">
+                                    {DIFFICULTIES.map(d => (
+                                        <button key={d.key} type="button" onClick={() => setDiff(d.key)}
+                                            className="px-2.5 py-1 rounded-lg text-xs font-bold transition-all"
+                                            style={{
+                                                background: diff === d.key ? d.bg : "hsl(150 15% 10%)",
+                                                color: diff === d.key ? d.color : "hsl(150 10% 45%)",
+                                                border: `1px solid ${diff === d.key ? d.color + "44" : "hsl(150 15% 16%)"}`,
+                                            }}>
+                                            {d.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="flex flex-col justify-end">
-                                <button
-                                    type="button"
-                                    disabled={!deadline}
-                                    onClick={() => { if (deadline) { setReminder(v => !v); setReminderAt("") } }}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-30"
-                                    style={{
-                                        background: reminder ? "rgba(19,236,106,0.12)" : "hsl(150 15% 10%)",
-                                        color: reminder ? "var(--green)" : "hsl(150 10% 45%)",
-                                        border: `1px solid ${reminder ? "rgba(19,236,106,0.3)" : "hsl(150 15% 16%)"}`,
-                                    }}>
-                                    <Bell className="h-3.5 w-3.5" />
-                                    {reminder ? "Reminder on" : "Set reminder"}
-                                </button>
-                                {!deadline && (
-                                    <p className="text-[10px] mt-1" style={{ color: "hsl(150 10% 35%)" }}>Set a deadline to enable reminder</p>
-                                )}
-                            </div>
-                        </div>
-                        {/* Reminder time picker — shown when reminder is on */}
-                        {reminder && (
                             <div>
                                 <label className="text-xs font-semibold mb-1 block" style={{ color: "hsl(150 10% 55%)" }}>
-                                    🔔 Remind me at
+                                    Priority <span style={{ color: "hsl(150 10% 35%)" }}>(optional)</span>
                                 </label>
-                                <input
-                                    type="datetime-local"
-                                    value={reminderAt}
-                                    min={todayMin}
-                                    max={deadline}
-                                    onChange={e => setReminderAt(e.target.value)}
-                                    className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                                    style={{ background: "rgba(19,236,106,0.06)", border: "1px solid rgba(19,236,106,0.25)", color: "hsl(150 10% 85%)" }}
-                                />
-                                <p className="text-[10px] mt-1" style={{ color: "hsl(150 10% 35%)" }}>Pick when you want the notification — before or at the deadline</p>
+                                <div className="flex gap-1.5 flex-wrap">
+                                    {PRIORITIES.map(p => (
+                                        <button key={p.key} type="button" onClick={() => setPriority(prev => prev === p.key ? "" : p.key)}
+                                            className="px-2.5 py-1 rounded-lg text-xs font-bold transition-all"
+                                            style={{
+                                                background: priority === p.key ? p.bg : "hsl(150 15% 10%)",
+                                                color: priority === p.key ? p.color : "hsl(150 10% 45%)",
+                                                border: `1px solid ${priority === p.key ? p.color + "44" : "hsl(150 15% 16%)"}`,
+                                            }}>
+                                            {p.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        )}
-                    </div>
+                        </div>
 
-                    {/* XP preview + actions */}
-                    <div className="flex items-center justify-between pt-1">
-                        <span className="text-xs flex items-center gap-1.5" style={{ color: "#f59e0b" }}>
-                            <Zap className="h-3.5 w-3.5" /> {TASK_XP[diff]} XP on completion
-                        </span>
-                        <div className="flex gap-2">
-                            <button onClick={resetForm}
-                                className="px-4 py-2 rounded-lg text-sm font-semibold"
-                                style={{ background: "hsl(150 15% 10%)", color: "hsl(150 10% 55%)" }}>
-                                Cancel
-                            </button>
-                            <button onClick={() => createMutation.mutate()}
-                                disabled={!canCreate || createMutation.isPending}
-                                className="px-4 py-2 rounded-lg text-sm font-bold transition-all disabled:opacity-50"
-                                style={{ background: "#13ec6a", color: "hsl(150 30% 4%)" }}>
-                                {createMutation.isPending ? "Forging..." : "Forge Task"}
-                            </button>
+                        {/* Deadline + Reminder */}
+                        <div className="flex flex-col gap-3">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-xs font-semibold mb-1 block" style={{ color: "hsl(150 10% 55%)" }}>
+                                        Deadline <span style={{ color: "hsl(150 10% 35%)" }}>(optional)</span>
+                                    </label>
+                                    <input
+                                        type="datetime-local"
+                                        value={deadline}
+                                        min={todayMin}
+                                        onChange={e => { setDeadline(e.target.value); if (!e.target.value) { setReminder(false); setReminderAt("") } }}
+                                        className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+                                        style={{ background: "hsl(150 15% 10%)", border: "1px solid hsl(150 15% 16%)", color: "hsl(150 10% 80%)" }}
+                                    />
+                                </div>
+                                <div className="flex flex-col justify-end">
+                                    <button
+                                        type="button"
+                                        disabled={!deadline}
+                                        onClick={() => { if (deadline) { setReminder(v => !v); setReminderAt("") } }}
+                                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-all disabled:opacity-30"
+                                        style={{
+                                            background: reminder ? "rgba(19,236,106,0.12)" : "hsl(150 15% 10%)",
+                                            color: reminder ? "var(--green)" : "hsl(150 10% 45%)",
+                                            border: `1px solid ${reminder ? "rgba(19,236,106,0.3)" : "hsl(150 15% 16%)"}`,
+                                        }}>
+                                        <Bell className="h-3.5 w-3.5" />
+                                        {reminder ? "Reminder on" : "Set reminder"}
+                                    </button>
+                                    {!deadline && (
+                                        <p className="text-[10px] mt-1" style={{ color: "hsl(150 10% 35%)" }}>Set a deadline to enable reminder</p>
+                                    )}
+                                </div>
+                            </div>
+                            {reminder && (
+                                <div>
+                                    <label className="text-xs font-semibold mb-1 block" style={{ color: "hsl(150 10% 55%)" }}>
+                                        🔔 Remind me at
+                                    </label>
+                                    <input
+                                        type="datetime-local"
+                                        value={reminderAt}
+                                        min={todayMin}
+                                        max={deadline}
+                                        onChange={e => setReminderAt(e.target.value)}
+                                        className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+                                        style={{ background: "rgba(19,236,106,0.06)", border: "1px solid rgba(19,236,106,0.25)", color: "hsl(150 10% 85%)" }}
+                                    />
+                                    <p className="text-[10px] mt-1" style={{ color: "hsl(150 10% 35%)" }}>Pick when you want the notification — before or at the deadline</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Divider */}
+                        <div style={{ borderTop: "1px solid hsl(150 15% 12%)" }} />
+
+                        {/* XP preview + actions */}
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs flex items-center gap-1.5" style={{ color: "#f59e0b" }}>
+                                <Zap className="h-3.5 w-3.5" /> {TASK_XP[diff]} XP on completion
+                            </span>
+                            <div className="flex gap-2">
+                                <button onClick={resetForm}
+                                    className="px-4 py-2 rounded-lg text-sm font-semibold"
+                                    style={{ background: "hsl(150 15% 10%)", color: "hsl(150 10% 55%)" }}>
+                                    Cancel
+                                </button>
+                                <button onClick={() => createMutation.mutate()}
+                                    disabled={!canCreate || createMutation.isPending}
+                                    className="px-4 py-2 rounded-lg text-sm font-bold transition-all disabled:opacity-50"
+                                    style={{ background: "#13ec6a", color: "hsl(150 30% 4%)" }}>
+                                    {createMutation.isPending ? "Forging..." : "Forge Task"}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             )}
+
 
             {/* Pending Tasks */}
             <div className="surface-card p-5">

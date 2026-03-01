@@ -33,7 +33,7 @@ export function ForgotPassword() {
                             style={{ background: "var(--green)", color: "hsl(150 30% 4%)" }}>
                             <Zap className="h-5 w-5" fill="currentColor" />
                         </div>
-                        <span style={{ fontFamily: "'Press Start 2P', cursive", fontSize: "11px", color: "hsl(150 10% 95%)", letterSpacing: "0.02em" }}>HabitForge</span>
+                        <span style={{ fontFamily: "'Press Start 2P', cursive", fontSize: "14px", color: "hsl(150 10% 95%)", letterSpacing: "0.02em" }}>HabitForge</span>
                     </div>
                     <h1 className="text-2xl font-extrabold" style={{ color: "hsl(150 10% 95%)" }}>Forgot Password</h1>
                     <p className="text-sm mt-1" style={{ color: "hsl(150 10% 50%)" }}>

@@ -37,7 +37,7 @@ export function Register() {
                         style={{ background: "var(--green)", color: "hsl(150 30% 4%)" }}>
                         <Zap className="h-5 w-5" fill="currentColor" />
                     </div>
-                    <span style={{ fontFamily: "'Press Start 2P', cursive", fontSize: "11px", color: "hsl(150 10% 95%)", letterSpacing: "0.02em" }}>HabitForge</span>
+                    <span style={{ fontFamily: "'Press Start 2P', cursive", fontSize: "14px", color: "hsl(150 10% 95%)", letterSpacing: "0.02em" }}>HabitForge</span>
                 </div>
 
                 <div className="surface-card p-6">
