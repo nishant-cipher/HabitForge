@@ -7,12 +7,18 @@ interface User {
     email: string;
     xp: number;
     level: number;
+    notificationPrefs?: {
+        dailyReminders: boolean;
+        streakAlerts: boolean;
+        clubActivity: boolean;
+    };
 }
 
 interface AuthContextType {
     user: User | null;
     login: (user: User) => void;
     logout: () => Promise<void>;
+    updateUser: (partial: Partial<User>) => void;
     isAuthenticated: boolean;
     isLoading: boolean;
 }
@@ -41,6 +47,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(newUser);
     };
 
+    const updateUser = (partial: Partial<User>) => {
+        setUser(prev => {
+            if (!prev) return prev;
+            const updated = { ...prev, ...partial };
+            localStorage.setItem('user', JSON.stringify(updated));
+            return updated;
+        });
+    };
+
     const logout = async () => {
         try {
             // Ask the server to clear the HttpOnly cookies
@@ -59,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 user,
                 login,
                 logout,
+                updateUser,
                 isAuthenticated: !!user,
                 isLoading,
             }}

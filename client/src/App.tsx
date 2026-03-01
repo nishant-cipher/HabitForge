@@ -7,6 +7,8 @@ import { MainLayout } from "@/components/layouts/MainLayout"
 import { Dashboard } from "@/pages/Dashboard"
 import { Login } from "@/pages/Login"
 import { Register } from "@/pages/Register"
+import { ForgotPassword } from "@/pages/ForgotPassword"
+import { ResetPassword } from "@/pages/ResetPassword"
 import { Habits } from "@/pages/Habits"
 import { Tasks } from "@/pages/Tasks"
 import { Clubs } from "@/pages/Clubs"
@@ -41,6 +43,8 @@ function App() {
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
 
                 <Route element={
                   <ProtectedRoute>

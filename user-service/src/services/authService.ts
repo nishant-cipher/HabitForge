@@ -199,3 +199,86 @@ export async function deleteUser(userId: string): Promise<void> {
     await User.findByIdAndDelete(userId);
     await Session.deleteMany({ userId });
 }
+
+/**
+ * Change password — verifies current password first
+ */
+export async function updatePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+): Promise<void> {
+    const user = await User.findById(userId);
+    if (!user) throw new Error('User not found');
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) throw new Error('Current password is incorrect');
+    user.passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    await user.save();
+}
+
+/**
+ * Update email
+ */
+export async function updateEmail(userId: string, newEmail: string): Promise<IUser | null> {
+    const existing = await User.findOne({ email: newEmail.toLowerCase() });
+    if (existing && existing._id.toString() !== userId) {
+        throw new Error('Email already in use');
+    }
+    return User.findByIdAndUpdate(userId, { $set: { email: newEmail.toLowerCase() } }, { new: true });
+}
+
+/**
+ * Update notification preferences
+ */
+export async function updateNotificationPrefs(
+    userId: string,
+    prefs: { dailyReminders?: boolean; streakAlerts?: boolean; clubActivity?: boolean }
+): Promise<IUser | null> {
+    const update: Record<string, boolean> = {};
+    if (prefs.dailyReminders !== undefined) update['notificationPrefs.dailyReminders'] = prefs.dailyReminders;
+    if (prefs.streakAlerts !== undefined) update['notificationPrefs.streakAlerts'] = prefs.streakAlerts;
+    if (prefs.clubActivity !== undefined) update['notificationPrefs.clubActivity'] = prefs.clubActivity;
+    return User.findByIdAndUpdate(userId, { $set: update }, { new: true });
+}
+
+/**
+ * Create a password reset token and store hashed copy with 1h expiry
+ */
+export async function createPasswordResetToken(email: string): Promise<{ rawToken: string; user: IUser }> {
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) throw new Error('No account found with that email');
+
+    const crypto = await import('crypto');
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await user.save();
+
+    return { rawToken, user };
+}
+
+/**
+ * Reset password using the raw token from the email link
+ */
+export async function resetPasswordByToken(rawToken: string, newPassword: string): Promise<void> {
+    const crypto = await import('crypto');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    const user = await User.findOne({
+        resetPasswordToken: hashedToken,
+        resetPasswordExpires: { $gt: new Date() },
+    });
+
+    if (!user) throw new Error('Reset token is invalid or has expired');
+
+    user.passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    // Invalidate all existing sessions
+    await Session.deleteMany({ userId: user._id.toString() });
+}
+
