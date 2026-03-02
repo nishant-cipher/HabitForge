@@ -1,0 +1,106 @@
+{
+    "title": "HabitForge Services Overview",
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "refresh": "10s",
+    "panels": [
+        {
+            "title": "HTTP Request Rate (Total)",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(http_requests_total[1m])) by (service)",
+                    "legendFormat": "{{service}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "title": "95th Percentile Response Time",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service))",
+                    "legendFormat": "{{service}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "title": "Node.js Memory Usage (Heap)",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 8
+            },
+            "targets": [
+                {
+                    "expr": "nodejs_heap_size_used_bytes",
+                    "legendFormat": "{{service}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "title": "CPU Usage (System+User)",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 8
+            },
+            "targets": [
+                {
+                    "expr": "rate(process_cpu_system_seconds_total[1m]) + rate(process_cpu_user_seconds_total[1m])",
+                    "legendFormat": "{{service}}",
+                    "refId": "A"
+                }
+            ]
+        },
+        {
+            "title": "HTTP 5xx Error Rate",
+            "type": "timeseries",
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 16
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(http_requests_total{status_code=~\"5..\"}[1m])) by (service)",
+                    "legendFormat": "{{service}}",
+                    "refId": "A"
+                }
+            ]
+        }
+    ],
+    "templating": {
+        "list": [
+            {
+                "name": "service",
+                "type": "query",
+                "datasource": "Prometheus",
+                "query": "label_values(up, service)",
+                "refresh": 1,
+                "includeAll": true,
+                "allValue": ".*"
+            }
+        ]
+    }
+}

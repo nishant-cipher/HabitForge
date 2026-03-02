@@ -1,8 +1,14 @@
 FROM node:18-alpine
 WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
+ENV CACHE_BUSTER=2
+
+# Copy shared module and build it
+COPY shared/ ./shared/
+RUN cd shared && npm install && npm run build
+
+# Copy service and install deps (includes @habitforge/shared: file:../shared)
+COPY analytics-service/ ./analytics-service/
+RUN cd analytics-service && npm install --include=dev
+
 EXPOSE 3004
-CMD ["npm", "start"]
+CMD ["sh", "-c", "cd analytics-service && npm run dev"]

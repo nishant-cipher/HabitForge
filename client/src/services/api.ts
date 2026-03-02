@@ -13,9 +13,10 @@ const api = axios.create({
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        const isLoginRequest = error.config?.url?.includes('/auth/login');
+        if (error.response?.status === 401 && !isLoginRequest) {
             // Cookie-based auth: if server returns 401, the cookie is missing/expired.
-            // Redirect to login unconditionally.
+            // Redirect to login unconditionally, UNLESS it's the login form itself failing.
             window.location.href = '/login';
         }
         return Promise.reject(error);

@@ -14,7 +14,7 @@ export function generateAccessToken(
     secret: string,
     expiresIn: string = '15m'
 ): string {
-    return jwt.sign(payload, secret, { expiresIn });
+    return jwt.sign(payload, secret, { expiresIn: expiresIn as any });
 }
 
 /**
@@ -25,7 +25,7 @@ export function generateRefreshToken(
     secret: string,
     expiresIn: string = '7d'
 ): string {
-    return jwt.sign(payload, secret, { expiresIn });
+    return jwt.sign(payload, secret, { expiresIn: expiresIn as any });
 }
 
 /**

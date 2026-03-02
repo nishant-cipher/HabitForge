@@ -21,7 +21,8 @@
     "ioredis": "^5.3.2",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.9",
-    "cookie-parser": "^1.4.7"
+    "cookie-parser": "^1.4.7",
+    "@habitforge/shared": "file:../shared"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

@@ -1,0 +1,27 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['habitforge-api-gateway:3000']
+
+  - job_name: 'user-service'
+    static_configs:
+      - targets: ['habitforge-user-service:3001']
+
+  - job_name: 'habit-service'
+    static_configs:
+      - targets: ['habitforge-habit-service:3002']
+
+  - job_name: 'club-service'
+    static_configs:
+      - targets: ['habitforge-club-service:3003']
+
+  - job_name: 'analytics-service'
+    static_configs:
+      - targets: ['habitforge-analytics-service:3004']
+
+  - job_name: 'task-service'
+    static_configs:
+      - targets: ['habitforge-task-service:3005']

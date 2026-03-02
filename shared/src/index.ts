@@ -11,3 +11,4 @@ export * from './utils/logger';
 export * from './utils/redis';
 export * from './utils/database';
 export * from './utils/errors';
+export * from './utils/metrics';

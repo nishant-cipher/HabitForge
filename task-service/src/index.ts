@@ -1,4 +1,5 @@
 import express from 'express';
+import { createMetricsMiddleware } from '@habitforge/shared';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
@@ -17,6 +18,9 @@ app.use(helmet());
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
+
+// Add metrics middleware
+app.use(createMetricsMiddleware('task-service') as any);
 
 // Health check
 app.get('/health', (_req, res) => {
