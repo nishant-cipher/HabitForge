@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { Users, BarChart3, ArrowRight, Zap, Target, Github, DiscIcon as Discord, Heart } from "lucide-react"
+import { Users, BarChart3, ArrowRight, Zap, Target, Github, Heart } from "lucide-react"
 
 export function LandingPage() {
     return (
