@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
 import api from "@/services/api"
-import { Zap, AlertTriangle } from "lucide-react"
+import { Zap, AlertTriangle, ArrowLeft } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 
@@ -62,13 +62,13 @@ export function Login() {
 
             <div className="w-full max-w-sm">
                 {/* Logo */}
-                <div className="flex items-center gap-3 justify-center mb-8">
+                <Link to="/" className="flex items-center gap-3 justify-center mb-8 hover:opacity-80 transition-opacity">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl"
                         style={{ background: "var(--green)", color: "hsl(150 30% 4%)" }}>
                         <Zap className="h-5 w-5" fill="currentColor" />
                     </div>
                     <span style={{ fontFamily: "'Press Start 2P', cursive", fontSize: "14px", color: "hsl(150 10% 95%)", letterSpacing: "0.02em" }}>HabitForge</span>
-                </div>
+                </Link>
 
                 <div className="surface-card p-6">
                     <h1 className="text-xl font-bold mb-1" style={{ color: "hsl(150 10% 95%)" }}>Welcome back</h1>
@@ -118,6 +118,12 @@ export function Login() {
                             Create one →
                         </Link>
                     </p>
+
+                    <div className="mt-6 flex justify-center">
+                        <Link to="/" className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
+                            <ArrowLeft className="h-4 w-4" /> Back to Home
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>
