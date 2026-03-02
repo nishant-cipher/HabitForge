@@ -115,40 +115,6 @@ services:
     networks:
       - habitforge-network
 
-  # Prometheus Monitoring
-  prometheus:
-    image: prom/prometheus:v3.1.0 #
-    container_name: habitforge-prometheus
-    restart: unless-stopped
-    volumes:
-      - ./prometheus:/etc/prometheus:ro # Mount as Read-Only for security
-      - prometheus_data:/prometheus
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.retention.time=15d" #
-      - "--web.enable-lifecycle" # Allows reloading config without restart
-    networks:
-      - habitforge-network
-
-  # Grafana Dashboards
-  grafana:
-    image: grafana/grafana:11.5.0 #
-    container_name: habitforge-grafana
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges:true # Security hardening
-    env_file:
-      - .env
-    volumes:
-      - grafana_data:/var/lib/grafana
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.grafana.rule=Host(`grafana.${CLIENT_URL}`)"
-      - "traefik.http.routers.grafana.entrypoints=websecure"
-      - "traefik.http.routers.grafana.tls.certresolver=myresolver"
-    networks:
-      - habitforge-network
-
   # Traefik Reverse Proxy
   traefik:
     image: traefik:v2.11
@@ -173,7 +139,9 @@ services:
     networks:
       - habitforge-network
 
+networks:
+  habitforge-network:
+    driver: bridge
+
 volumes:
   redis_data:
-  prometheus_data:
-  grafana_data:
