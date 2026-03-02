@@ -1,12 +1,11 @@
 apiVersion: 1
 
 providers:
-  - name: 'HabitForge Provisioned Dashboards'
+  - name: 'default'
     orgId: 1
-    folder: 'General'
+    folder: ''
     type: file
     disableDeletion: false
     updateIntervalSeconds: 10
-    allowUiUpdates: true
     options:
       path: /var/lib/grafana/dashboards
