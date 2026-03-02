@@ -27,6 +27,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=habitforge-network"
       - "traefik.http.routers.api.rule=Host(`api.habit-forge.app`)"
       - "traefik.http.routers.api.entrypoints=web,websecure"
       - "traefik.http.routers.api.tls=true"
@@ -143,6 +144,7 @@ services:
       - grafana_data:/var/lib/grafana
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=habitforge-network"
       - "traefik.http.routers.grafana.rule=Host(`grafana.habit-forge.app`)"
       - "traefik.http.routers.grafana.entrypoints=web,websecure"
       - "traefik.http.routers.grafana.tls=true"
