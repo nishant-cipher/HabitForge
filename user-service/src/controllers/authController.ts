@@ -339,7 +339,10 @@ export async function forgotPassword(req: Request, res: Response, next: NextFunc
             return res.status(200).json({ success: true, message: 'If that email is registered, a reset link has been sent.' });
         }
 
-        const resetLink = `${process.env.CLIENT_URL}/reset-password?token=${rawToken}`;
+        // Handle multiple CLIENT_URLs (e.g. "https://habit-forge.app,https://www.habit-forge.app")
+        const clientUrls = (process.env.CLIENT_URL || '').split(',');
+        const primaryClientUrl = clientUrls[0].trim();
+        const resetLink = `${primaryClientUrl}/reset-password?token=${rawToken}`;
 
         try {
             const { sendPasswordResetEmail } = await import('../utils/mailer');
