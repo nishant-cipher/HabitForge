@@ -28,6 +28,6 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /path/to/your/project
+            cd ~/HabitForge
             git pull origin main
             docker compose up -d --build api-gateway user-service habit-service club-service analytics-service task-service
