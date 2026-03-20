@@ -9,6 +9,8 @@ export interface IHabitLog extends Document {
     modeAtCompletion: string;
     notes?: string;
     canEdit: boolean;
+    isGraceCard?: boolean;
+    graceCardType?: 'silver' | 'gold';
     createdAt: Date;
     updatedAt: Date;
 }
@@ -51,6 +53,15 @@ const HabitLogSchema = new Schema<IHabitLog>({
     canEdit: {
         type: Boolean,
         default: false
+    },
+    isGraceCard: {
+        type: Boolean,
+        default: false
+    },
+    graceCardType: {
+        type: String,
+        enum: ['silver', 'gold'],
+        required: false
     }
 }, {
     timestamps: true

@@ -25,5 +25,9 @@ router.post('/me/use-grace-card', authenticate, authController.useGraceCard);
 // Inter-service routes (for Habit Service)
 router.put('/:userId/xp', authController.updateUserXP);
 router.post('/:userId/award-grace-card', authController.awardGraceCard);
+router.put('/:userId/grace-cards', authController.updateGraceCards);
+
+// Internal API routes (for daily checker)
+router.get('/internal/users', authController.getAllUsers);
 
 export default router;

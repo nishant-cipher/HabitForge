@@ -12,3 +12,6 @@ export * from './utils/redis';
 export * from './utils/database';
 export * from './utils/errors';
 export * from './utils/metrics';
+
+// Export shared services
+export * from './services/dailyHabitChecker';

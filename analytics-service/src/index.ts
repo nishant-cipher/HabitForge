@@ -5,8 +5,9 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 import analyticsRoutes from './routes/analyticsRoutes';
+import { schedulerService } from './services/scheduler';
 
 dotenv.config();
 
@@ -73,6 +74,16 @@ app.get('/health', (req: Request, res: Response) => {
 
 // Mount routes
 app.use('/api', analyticsRoutes);
+
+// Manual daily check trigger for testing/admin
+app.post('/api/trigger-daily-check', async (req: Request, res: Response) => {
+    try {
+        await schedulerService.triggerDailyCheck();
+        res.status(200).json({ success: true, message: 'Daily check completed' });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
 
 // 404 handler
 app.use((req: Request, res: Response) => {

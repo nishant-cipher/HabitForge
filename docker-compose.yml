@@ -116,6 +116,38 @@ services:
     networks:
       - habitforge-network
 
+  # Host Metrics (Node Exporter)
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: habitforge-node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    networks:
+      - habitforge-network
+
+  # Container Metrics (cAdvisor)
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: habitforge-cadvisor
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - habitforge-network
+
   # Prometheus Monitoring
   prometheus:
     image: prom/prometheus:latest #
@@ -142,6 +174,8 @@ services:
       - .env
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=habitforge-network"

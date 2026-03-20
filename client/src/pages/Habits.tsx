@@ -217,31 +217,53 @@ export function Habits() {
 
     const logMutation = useMutation({
         mutationFn: (id: string) => habitService.logHabit(id),
+        onMutate: async (id: string) => {
+            await queryClient.cancelQueries({ queryKey: ["logs"] })
+            await queryClient.cancelQueries({ queryKey: ["habits"] })
+            const prevLogs = queryClient.getQueryData(["logs"])
+            const prevHabits = queryClient.getQueryData(["habits"])
+            // Optimistically add a synthetic log entry
+            queryClient.setQueryData(["logs"], (old: any[] | undefined) => [
+                ...(old || []),
+                { _id: `optimistic-${id}-${Date.now()}`, habitId: id, completedAt: new Date().toISOString(), xpEarned: 0 },
+            ])
+            // Optimistically bump the streak
+            queryClient.setQueryData(["habits"], (old: any[] | undefined) =>
+                (old || []).map((h: any) => h._id === id ? { ...h, currentStreak: (h.currentStreak || 0) + 1 } : h)
+            )
+            setCompletingId(null)
+            toast.success("Habit logged! 🔥")
+            return { prevLogs, prevHabits }
+        },
         onSuccess: (data: any) => {
+            const xp = data?.xpEarned ?? data?.log?.xpEarned ?? 0
+            if (xp > 0) toast.xp(xp, "XP earned! ⚡")
+        },
+        onError: (e: any, _id: string, context: any) => {
+            if (context?.prevLogs) queryClient.setQueryData(["logs"], context.prevLogs)
+            if (context?.prevHabits) queryClient.setQueryData(["habits"], context.prevHabits)
+            setCompletingId(null)
+            toast.error("Failed to log habit", e?.response?.data?.message)
+        },
+        onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["habits"] })
             queryClient.invalidateQueries({ queryKey: ["stats"] })
             queryClient.invalidateQueries({ queryKey: ["logs"] })
-            setCompletingId(null)
-            const xp = data?.xpEarned ?? data?.log?.xpEarned ?? 0
-            toast.xp(xp, "Habit logged! 🔥")
-        },
-        onError: (e: any) => {
-            setCompletingId(null)
-            toast.error("Failed to log habit", e?.response?.data?.message)
         },
     })
 
     const logClubHabitMutation = useMutation({
         mutationFn: ({ clubId, habitId, habitName: _n }: { clubId: string; habitId: string; habitName: string }) =>
             clubService.logClubHabit(clubId, habitId),
-        onSuccess: (data: any, { habitId, habitName }) => {
-            queryClient.invalidateQueries({ queryKey: ["habits"] })
-            queryClient.invalidateQueries({ queryKey: ["stats"] })
-            queryClient.invalidateQueries({ queryKey: ["logs"] })
-            setCompletingClubHabitId(null)
+        onMutate: async ({ habitId, habitName }) => {
             markClubHabitLogged(habitId)
+            setCompletingClubHabitId(null)
+            toast.success(`${habitName} logged! 🏆`)
+            return { habitId }
+        },
+        onSuccess: (data: any, { habitName }) => {
             const xp = data?.xpEarned ?? 0
-            toast.xp(xp, `${habitName} logged! 🏆`)
+            if (xp > 0) toast.xp(xp, `${habitName} +${xp} XP! 🏆`)
         },
         onError: (e: any, { habitId }) => {
             setCompletingClubHabitId(null)
@@ -251,6 +273,11 @@ export function Habits() {
             } else {
                 toast.error("Failed to log club habit", msg)
             }
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ["habits"] })
+            queryClient.invalidateQueries({ queryKey: ["stats"] })
+            queryClient.invalidateQueries({ queryKey: ["logs"] })
         },
     })
 

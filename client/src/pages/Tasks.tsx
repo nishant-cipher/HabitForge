@@ -208,15 +208,30 @@ export function Tasks() {
 
     const completeMutation = useMutation({
         mutationFn: (taskId: string) => taskService.completeTask(taskId),
+        onMutate: async (taskId: string) => {
+            await qc.cancelQueries({ queryKey: ["tasks"] })
+            const prevTasks = qc.getQueryData(["tasks"])
+            // Optimistically mark the task as completed
+            qc.setQueryData(["tasks"], (old: any[] | undefined) =>
+                (old || []).map((t: any) => t._id === taskId ? { ...t, isCompleted: true, completedAt: new Date().toISOString() } : t)
+            )
+            toast.success("Task completed!")
+            notify("Task completed! ⚡", "XP incoming...")
+            confetti()
+            return { prevTasks }
+        },
         onSuccess: (data) => {
+            if (data.xpEarned > 0) toast.xp(data.xpEarned, `+${data.xpEarned} XP earned! ⚡`)
+        },
+        onError: (e: any, _id: string, context: any) => {
+            if (context?.prevTasks) qc.setQueryData(["tasks"], context.prevTasks)
+            toast.error("Failed to complete task", e?.response?.data?.message || e?.message)
+        },
+        onSettled: () => {
             qc.invalidateQueries({ queryKey: ["tasks"] })
             qc.invalidateQueries({ queryKey: ["tasks-stats"] })
             qc.invalidateQueries({ queryKey: ["profile"] })
-            toast.xp(data.xpEarned, "Task completed!")
-            notify("Task completed! ⚡", `+${data.xpEarned} XP earned`)
-            confetti()
         },
-        onError: (e: any) => toast.error("Failed to complete task", e?.response?.data?.message || e?.message),
     })
 
     const clearCompletedMutation = useMutation({

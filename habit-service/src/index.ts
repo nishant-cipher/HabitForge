@@ -7,6 +7,8 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import habitRoutes from './routes/habitRoutes';
 import gamificationRoutes from './routes/gamificationRoutes';
+import internalRoutes from './routes/internalRoutes';
+import graceCardRoutes from './routes/graceCardRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -33,6 +35,8 @@ app.use(createMetricsMiddleware('habit-service') as any);
 // Routes
 app.use('/api/habits', habitRoutes);
 app.use('/api/gamification', gamificationRoutes);
+app.use('/api/internal', internalRoutes);
+app.use('/api/grace-cards', graceCardRoutes);
 
 // Health check
 app.get('/health', async (req: Request, res: Response) => {

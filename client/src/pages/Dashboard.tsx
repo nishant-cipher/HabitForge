@@ -181,38 +181,68 @@ export function Dashboard() {
         staleTime: 60_000,
     })
 
-    // ── Habit log mutation ────────────────────────────────────────────────────
+    // ── Habit log mutation (optimistic) ─────────────────────────────────────────
     const logHabitMutation = useMutation({
         mutationFn: (id: string) => habitService.logHabit(id),
-        onSuccess: (data: any, id: string) => {
-            qc.invalidateQueries({ queryKey: ["habits"] })
-            qc.invalidateQueries({ queryKey: ["stats"] })
-            qc.invalidateQueries({ queryKey: ["logs"] })
-            setCompletingHabitId(null)
+        onMutate: async (id: string) => {
+            // Cancel any outgoing refetches so they don't overwrite our optimistic update
+            await qc.cancelQueries({ queryKey: ["logs"] })
+            await qc.cancelQueries({ queryKey: ["habits"] })
+            // Snapshot previous values for rollback
+            const prevLogs = qc.getQueryData(["logs"])
+            const prevHabits = qc.getQueryData(["habits"])
+            // Optimistically add a synthetic log entry
+            qc.setQueryData(["logs"], (old: any[] | undefined) => [
+                ...(old || []),
+                { _id: `optimistic-${id}-${Date.now()}`, habitId: id, completedAt: new Date().toISOString(), xpEarned: 0 },
+            ])
+            // Optimistically bump the streak on the habit
+            qc.setQueryData(["habits"], (old: any[] | undefined) =>
+                (old || []).map((h: any) => h._id === id ? { ...h, currentStreak: (h.currentStreak || 0) + 1 } : h)
+            )
+            // Show toast and confetti immediately
             const habitName = habits.find((h: any) => h._id === id)?.name
-            const xp = data?.xpEarned ?? data?.log?.xpEarned ?? 0
-            toast.xp(xp, habitName ? `${habitName} logged! 🔥` : "Habit logged! Keep the streak going 🔥")
+            toast.success(habitName ? `${habitName} logged! 🔥` : "Habit logged! Keep the streak going 🔥")
             confetti()
+            setCompletingHabitId(null)
+            return { prevLogs, prevHabits }
         },
-        onError: (e: any) => {
+        onSuccess: (data: any) => {
+            // Update toast with real XP once server responds
+            const xp = data?.xpEarned ?? data?.log?.xpEarned ?? 0
+            if (xp > 0) toast.xp(xp, "XP earned! ⚡")
+        },
+        onError: (e: any, _id, context: any) => {
+            // Roll back to previous state
+            if (context?.prevLogs) qc.setQueryData(["logs"], context.prevLogs)
+            if (context?.prevHabits) qc.setQueryData(["habits"], context.prevHabits)
             setCompletingHabitId(null)
             toast.error("Failed to log habit", e?.response?.data?.message)
         },
-    })
-
-    // ── Club habit log mutation ───────────────────────────────────────────────
-    const logClubHabitMutation = useMutation({
-        mutationFn: ({ clubId, habitId, habitName: _habitName }: { clubId: string; habitId: string; habitName: string }) =>
-            clubService.logClubHabit(clubId, habitId),
-        onSuccess: (data: any, { habitId, habitName }) => {
+        onSettled: () => {
+            // Always re-sync from server
             qc.invalidateQueries({ queryKey: ["habits"] })
             qc.invalidateQueries({ queryKey: ["stats"] })
             qc.invalidateQueries({ queryKey: ["logs"] })
-            setCompletingClubHabitId(null)
+            qc.invalidateQueries({ queryKey: ["profile"] })
+        },
+    })
+
+    // ── Club habit log mutation (optimistic) ──────────────────────────────────
+    const logClubHabitMutation = useMutation({
+        mutationFn: ({ clubId, habitId, habitName: _habitName }: { clubId: string; habitId: string; habitName: string }) =>
+            clubService.logClubHabit(clubId, habitId),
+        onMutate: async ({ habitId, habitName }) => {
+            // Optimistically mark as logged immediately
             markClubHabitLogged(habitId)
-            const xp = data?.xpEarned ?? 0
-            toast.xp(xp, `${habitName} logged! 🏆`)
+            setCompletingClubHabitId(null)
+            toast.success(`${habitName} logged! 🏆`)
             confetti()
+            return { habitId }
+        },
+        onSuccess: (data: any, { habitName }) => {
+            const xp = data?.xpEarned ?? 0
+            if (xp > 0) toast.xp(xp, `${habitName} +${xp} XP! 🏆`)
         },
         onError: (e: any, { habitId }) => {
             setCompletingClubHabitId(null)
@@ -223,22 +253,40 @@ export function Dashboard() {
                 toast.error("Failed to log club habit", msg)
             }
         },
+        onSettled: () => {
+            qc.invalidateQueries({ queryKey: ["habits"] })
+            qc.invalidateQueries({ queryKey: ["stats"] })
+            qc.invalidateQueries({ queryKey: ["logs"] })
+        },
     })
 
-    // ── Task complete mutation ─────────────────────────────────────────────────
+    // ── Task complete mutation (optimistic) ────────────────────────────────────
     const completeTaskMutation = useMutation({
         mutationFn: (id: string) => taskService.completeTask(id),
+        onMutate: async (id: string) => {
+            await qc.cancelQueries({ queryKey: ["tasks"] })
+            const prevTasks = qc.getQueryData(["tasks"])
+            // Optimistically mark the task as completed
+            qc.setQueryData(["tasks"], (old: any[] | undefined) =>
+                (old || []).map((t: any) => t._id === id ? { ...t, isCompleted: true, completedAt: new Date().toISOString() } : t)
+            )
+            setCompletingTaskId(null)
+            toast.success("Task completed! 🎯")
+            confetti()
+            return { prevTasks }
+        },
         onSuccess: (data) => {
+            if (data.xpEarned > 0) toast.xp(data.xpEarned, `+${data.xpEarned} XP earned! ⚡`)
+        },
+        onError: (e: any, _id, context: any) => {
+            if (context?.prevTasks) qc.setQueryData(["tasks"], context.prevTasks)
+            setCompletingTaskId(null)
+            toast.error("Failed to complete task", e?.response?.data?.message)
+        },
+        onSettled: () => {
             qc.invalidateQueries({ queryKey: ["tasks"] })
             qc.invalidateQueries({ queryKey: ["tasks-stats"] })
             qc.invalidateQueries({ queryKey: ["profile"] })
-            setCompletingTaskId(null)
-            toast.xp(data.xpEarned, "Task completed! 🎯")
-            confetti()
-        },
-        onError: (e: any) => {
-            setCompletingTaskId(null)
-            toast.error("Failed to complete task", e?.response?.data?.message)
         },
     })
 

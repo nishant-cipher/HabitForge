@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { IUser } from '../models/User';
 import * as authService from '../services/authService';
 import jwt from 'jsonwebtoken';
 import * as http from 'http';
@@ -255,6 +256,48 @@ export async function useGraceCard(req: Request, res: Response, next: NextFuncti
         });
     } catch (error: any) {
         res.status(400).json({ success: false, message: error.message || 'Failed to use grace card' });
+    }
+}
+
+/** Update grace cards (internal API) */
+export async function updateGraceCards(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { userId } = req.params;
+        const { silverChange, goldChange } = req.body;
+        if (!userId) return res.status(400).json({ success: false, message: 'userId required' });
+        
+        const user = await authService.getUserById(userId);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        
+        let updatedUser: IUser | null = user;
+        
+        if (silverChange !== undefined) {
+            updatedUser = await authService.updateGraceCards(userId, 'graceSilverCards', silverChange);
+        }
+        
+        if (goldChange !== undefined && updatedUser) {
+            updatedUser = await authService.updateGraceCards(userId, 'graceGoldCards', goldChange);
+        }
+        
+        res.status(200).json({
+            success: true,
+            data: { graceSilverCards: updatedUser?.graceSilverCards, graceGoldCards: updatedUser?.graceGoldCards }
+        });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message || 'Failed to update grace cards' });
+    }
+}
+
+/** Get all users (internal API) */
+export async function getAllUsers(req: Request, res: Response, next: NextFunction) {
+    try {
+        const users = await authService.getAllUsers();
+        res.status(200).json({
+            success: true,
+            data: users
+        });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message || 'Failed to get users' });
     }
 }
 

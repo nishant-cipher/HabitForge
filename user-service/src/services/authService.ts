@@ -282,3 +282,10 @@ export async function resetPasswordByToken(rawToken: string, newPassword: string
     await Session.deleteMany({ userId: user._id.toString() });
 }
 
+/**
+ * Get all users (internal API)
+ */
+export async function getAllUsers(): Promise<IUser[]> {
+    return User.find().select('_id email username mode xp level graceSilverCards graceGoldCards createdAt');
+}
+
