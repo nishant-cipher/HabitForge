@@ -1,0 +1,229 @@
+version: '3.8'
+
+services:
+
+  # Redis Cache & Queue
+  redis:
+    image: redis:7.0-alpine
+    container_name: habitforge-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    networks:
+      - habitforge-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Gateway Service
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: habitforge-api-gateway
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=habitforge-network"
+      - "traefik.http.routers.api.rule=Host(`api.habit-forge.app`)"
+      - "traefik.http.routers.api.entrypoints=web,websecure"
+      - "traefik.http.routers.api.tls=true"
+      - "traefik.http.routers.api.tls.certresolver=myresolver"
+      - "traefik.http.services.api.loadbalancer.server.port=3000"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - user-service
+      - habit-service
+      - club-service
+      - analytics-service
+      - task-service
+    networks:
+      - habitforge-network
+
+  # User Service
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    container_name: habitforge-user-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    networks:
+      - habitforge-network
+
+  # Habit & Gamification Service
+  habit-service:
+    build:
+      context: .
+      dockerfile: habit-service/Dockerfile
+    container_name: habitforge-habit-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    networks:
+      - habitforge-network
+
+  # Club & Leaderboard Service
+  club-service:
+    build:
+      context: .
+      dockerfile: club-service/Dockerfile
+    container_name: habitforge-club-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    networks:
+      - habitforge-network
+
+  # Analytics & Worker Service
+  analytics-service:
+    build:
+      context: .
+      dockerfile: analytics-service/Dockerfile
+    container_name: habitforge-analytics-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    networks:
+      - habitforge-network
+
+  # Task Service
+  task-service:
+    build:
+      context: .
+      dockerfile: task-service/Dockerfile
+    container_name: habitforge-task-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - user-service
+    networks:
+      - habitforge-network
+
+  # Host Metrics (Node Exporter)
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: habitforge-node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    networks:
+      - habitforge-network
+
+  # Container Metrics (cAdvisor)
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: habitforge-cadvisor
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - habitforge-network
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:latest #
+    container_name: habitforge-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus:/etc/prometheus:ro # Mount as Read-Only for security
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=15d" #
+      - "--web.enable-lifecycle" # Allows reloading config without restart
+    networks:
+      - habitforge-network
+
+  # Grafana Dashboards
+  grafana:
+    image: grafana/grafana:latest #
+    container_name: habitforge-grafana
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true # Security hardening
+    env_file:
+      - .env
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=habitforge-network"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.habit-forge.app`)"
+      - "traefik.http.routers.grafana.entrypoints=web,websecure"
+      - "traefik.http.routers.grafana.tls=true"
+      - "traefik.http.routers.grafana.tls.certresolver=myresolver"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+    networks:
+      - habitforge-network
+
+  # Traefik Reverse Proxy
+  traefik:
+    image: traefik:v2.11
+    container_name: habitforge-traefik
+    restart: unless-stopped
+    command:
+      - "--api.dashboard=true"
+      - "--log.level=DEBUG"
+
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=habitforge-network"
+
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=sujayjsx@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+
+    networks:
+      - habitforge-network
+
+volumes:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+
+networks:
+  habitforge-network:
+    driver: bridge

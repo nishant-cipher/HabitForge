@@ -16,36 +16,34 @@ HabitForge is an adaptive habit-tracking platform featuring three distinct behav
 ##  System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Client Applications                      │
-│              (Web, Mobile, Future Integrations)             │
-└─────────────────────┬───────────────────────────────────────┘
-                      │ HTTPS/REST/WebSocket
-┌─────────────────────▼───────────────────────────────────────┐
-│                    API Gateway (3000)                       │
-│  • JWT Validation • Rate Limiting • Request Routing         │
-└─────┬──────────────┬──────────────┬──────────────┬──────────┘
-      │              │              │              │
-┌─────▼─────┐  ┌────▼──────┐  ┌───▼──────┐  ┌───▼─────────┐
-│ User      │  │ Habit &   │  │ Club &   │  │ Analytics & │
-│ Service   │  │ Game      │  │ Leader-  │  │ Worker      │
-│ (3001)    │  │ Service   │  │ board    │  │ Service     │
-│           │  │ (3002)    │  │ Service  │  │ (3004)      │
-│           │  │           │  │ (3003)   │  │             │
-└─────┬─────┘  └────┬──────┘  └───┬──────┘  └───┬─────────┘
-      │              │              │              │
-┌─────▼──────────────▼──────────────▼──────────────▼─────────┐
-│              MongoDB + Redis (Cache & Queue)               │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                      Client Applications                         │
+│                  (React/Vite Web Application)                    │
+└──────────────────────┬───────────────────────────────────────────┘
+                       │ HTTPS/REST
+┌──────────────────────▼───────────────────────────────────────────┐
+│                     API Gateway (3000)                           │
+│   • JWT Validation • Rate Limiting • Request Routing             │
+└─────┬──────────────┬──────────────┬──────────────┬─────────┬─────┘
+      │              │              │              │         │
+┌─────▼─────┐  ┌────▼──────┐  ┌───▼──────┐  ┌───▼─────┐ ┌───▼─────┐
+│ User      │  │ Habit &   │  │ Club &   │  │ Analytics││ Task    │
+│ Service   │  │ Game      │  │ Leader-  │  │ & Worker ││ Service │
+│ (3001)    │  │ Service   │  │ board    │  │ Service  ││ (3005)  │
+│           │  │ (3002)    │  │ (3003)   │  │ (3004)   ││         │
+└─────┬─────┘  └────┬──────┘  └───┬──────┘  └───┬─────┘ └───┬─────┘
+      │              │              │              │         │
+┌─────▼──────────────▼──────────────▼──────────────▼─────────▼─────┐
+│               MongoDB + Redis (Cache & Queue)                    │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ##  Services Breakdown
 
 ### 1. **API Gateway Service** (`:3000`)
 - Single entry point for all client requests
-- JWT token validation and rate limiting
-- Circuit breaker pattern for service failures
-- Mode-based rate limiting (Competitive mode allows more frequent updates)
+- JWT token validation and request routing
+- Rate limiting using Redis
 
 ### 2. **User Service** (`:3001`) 👤
 - Authentication & authorization (JWT-based)
@@ -68,8 +66,13 @@ HabitForge is an adaptive habit-tracking platform featuring three distinct behav
 ### 5. **Analytics & Worker Service** (`:3004`) 📊⏳
 - Dashboard data aggregation and analytics
 - Background job processing (daily resets, streak decay)
-- Async job processing with Redis Queue (BullMQ)
 - **Database**: MongoDB (`analyticsCache`, `aggregates`)
+
+### 6. **Task Service** (`:3005`) ✅
+- To-do list management integrated with the ecosystem
+- Task completion statistics tracking
+- Due date / reminder features
+- **Database**: MongoDB (`tasks`)
 
 ##  Data Storage
 
@@ -78,12 +81,17 @@ HabitForge is an adaptive habit-tracking platform featuring three distinct behav
 - **Habit Service**: `habits`, `habitLogs`, `userStats`, `badges`
 - **Club Service**: `clubs`, `memberships`, `leaderboards`
 - **Analytics Service**: `analyticsCache`, `aggregates`
+- **Task Service**: `tasks`
 
 ### Caching & Queue: Redis
 - User data caching (profiles, XP, mode)
 - Leaderboard caching with TTL strategies
 - Rate limiting implementation
 - Async job queues for background processing
+
+### Metrics Storage: Prometheus
+- Time-series database for scraping service metrics
+- Stores response latencies, HTTP request counts, and memory/CPU usage for all services
 
 ##  Core Features
 
@@ -108,6 +116,10 @@ HabitForge is an adaptive habit-tracking platform featuring three distinct behav
 - **Consistency scoring algorithms**
 - **Progress visualization** data
 - **Weekly summary generation**
+
+###  Productivity Integration
+- **Task and To-do Management**: Create, track, and complete tasks.
+- **Deadline Sorting & Priorities**: Organize by urgency.
 
 ##  System Flows
 
@@ -144,98 +156,69 @@ User requests mode change →
 ##  Security & Performance
 
 ###  Security Features
-- JWT-based authentication with Redis token storage
+- JWT-based authentication
 - Role-based access control for club management
-- Mode-based rate limiting using token bucket algorithm
 - CORS management and security headers
 
 ###  Performance Optimizations
-- **Aggressive caching** with smart invalidation rules
-- **Redis clustering** for high availability
-- **Database sharding** strategy (by userId, clubId)
-- **Eventual consistency model** for gamification updates
+- **Caching** for leaderboards and gamification using Redis
+- Logical separation of data via multiple collections/databases
 
 ##  Deployment
 
+### Environment Configuration
+The entire application stack relies on a centralized `.env` configuration for secrets, database URIs, and inter-service URLs. 
+
 ### Development Environment
 ```yaml
-# Docker Compose Setup
+# Docker Compose Setup (docker-compose.yml)
 services:
   api-gateway:3000
   user-service:3001
   habit-service:3002
   club-service:3003
   analytics-service:3004
-  mongodb:27017
+  task-service:3005
   redis:6379
+  prometheus:9090
+  grafana:3006
 ```
-
-### Production Architecture
-- **Kubernetes** deployment with separate pods per service
-- **Horizontal scaling** for stateless services
-- **MongoDB replica sets** with sharding for growth
-- **Nginx ingress controller** for load balancing
-- **Autoscaling** based on CPU, memory, and custom metrics
+For local development using Docker Desktop, you can utilize the `start-services-desktop.sh` script to streamline startup. For production deployment on a cloud compute instance, please refer to our `DEPLOYMENT_GUIDE.md`.
 
 ##  Monitoring & Metrics
 
 ### Health Checks
 - `/health`: Service status, database connectivity, uptime
-- `/metrics`: Prometheus metrics endpoint
+- `/metrics`: Prometheus metrics endpoint exposed by all services (powered by `express-prom-bundle`)
+
+### Centralized Monitoring Stack
+- **Prometheus**: Automatically scrapes `/metrics` from all running containers internally.
+- **Grafana**: Pre-provisioned dashboards visualizing container health, API response latencies, and route usage.
 
 ### Key Metrics Tracked
-- **Technical**: Response latency, error rates, cache hit ratios
+- **Technical**: Response latency (p95, p99), error rates, memory footprint, cache hit ratios
 - **Business**: Daily active users, habit completion rates, club engagement
 - **Performance**: Database query times, Redis latency, API throughput
 
-##  Design Decisions & Trade-offs
-
-| Decision | Trade-off | Benefit |
-|----------|-----------|---------|
-| **4 services instead of 8+** | Reduced complexity vs perfect separation | Easier deployment and debugging |
-| **Redis Queue instead of Kafka** | Less features vs simpler operations | Easier setup, adequate for scale |
-| **Eventual consistency for gamification** | Immediate consistency vs performance | Better UX, acceptable XP delay |
-| **MongoDB for all services** | Not perfect fit for all vs simplicity | Single technology stack |
-
-##  Success Metrics
-
-### Technical Goals
-- API response time < 200ms (p95)
-- Cache hit ratio > 90%
-- Service availability > 99.9%
-- Background job completion < 5 minutes
-
-### Business Goals
-- High user retention across all modes
-- Consistent habit completion rates
-- Strong club engagement metrics
-- Positive mode switching patterns
-
-##  Future Enhancements
-
-### Short-term (Post-MVP)
-- Mobile app with offline sync capability
-- Advanced analytics dashboard
-- Custom habit templates
-- Exportable progress reports
-
-### Long-term Vision
-- AI-based habit recommendations
-- Integration with health/fitness apps
-- Organization-wide club features
-- Advanced rule engine for custom modes
 
 ## 📁 Project Structure
 ```
 habitforge/
+├── client/               # React Web Application (Frontend)
 ├── api-gateway/          # API Gateway Service
 ├── user-service/         # User Management Service
 ├── habit-service/        # Habit & Gamification Service
 ├── club-service/         # Club & Leaderboard Service
 ├── analytics-service/    # Analytics & Worker Service
-├── shared/              # Shared libraries & types
-├── docker-compose.yml   # Development environment
-└── kubernetes/          # Production deployment files
+├── task-service/         # Task Management Service
+├── shared/               # Shared libraries & types
+├── prometheus/           # Prometheus scraping configuration
+├── grafana/              # Grafana dashboards & provisioning
+├── docker-compose.yml    # Development environment
+├── .env.example          # Environment variables template
+├── start-services-desktop.sh # Easy local Docker startup script
+│── DEPLOYMENT_GUIDE.md   # Production deployment instructions
+└── docs/                 # General documentation & testing guides
 ```
 
 ##  Getting Started
@@ -252,24 +235,24 @@ habitforge/
 git clone https://github.com/yourusername/habitforge.git
 cd habitforge
 
-# Start all services
-docker-compose up -d
+# Configure Environment Variables
+cp .env.example .env
+# Edit .env with your specific MongoDB URI and JWT Keys if needed
 
-# Access the API
-curl http://localhost:3000/health
+# Start all services
+docker-compose --env-file .env up -d --build
+# Alternatively, for Docker Desktop:
+# ./start-services-desktop.sh
+
+# Access the API Gateway
+curl http://localhost:3000/api/health
+
+# Access Grafana Monitoring Dashboard
+# Browse to: http://localhost:3006
 ```
 
 ## 📄 License
 MIT License - see [LICENSE](LICENSE) file for details.
-
-## 👥 Contributing
-Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-## 📞 Support
-- [Documentation](docs/)
-- [Issue Tracker](https://github.com/yourusername/habitforge/issues)
-- [Discussion Forum](https://github.com/yourusername/habitforge/discussions)
-
 ---
 
 **HabitForge** - Forge better habits, one day at a time. 🛠️✨
